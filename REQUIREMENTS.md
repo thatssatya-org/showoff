@@ -14,9 +14,27 @@ This is the best fit for a portfolio in 2026:
 - Astro delivers semantic, crawlable HTML and almost no JavaScript for the narrative pages. A client-rendered SPA is needless latency and weaker SEO here.
 - React islands are reserved for live cards: GitHub activity, music, social activity, project filters, and the newsletter form.
 - Spring Boot keeps the integration surface in Java, supports robust OAuth and scheduling, and runs cleanly in a small container.
-- Docker Compose, PostgreSQL, and the existing reverse-proxy/Tailscale patterns keep the deployment self-hosted and inexpensive.
+- Docker Compose, MongoDB, and the existing reverse-proxy/Tailscale patterns keep the deployment self-hosted and inexpensive.
 
 The public site will be a **curated work record**, not a social-media firehose and not a dashboard for private infrastructure.
+
+### 1.1 Platform engineering baseline
+
+The backend is an instance-configurable product: each self-hosting operator supplies their own approved public profile, content, vendor handles, OAuth credentials/tokens, and enabled capabilities. It is **not** a multi-tenant hosted service; one deployment has one owner and one isolated set of secrets/data. No account, handle, profile URL, provider capability, or content card is hard-coded for Satyajit.
+
+- Use [`thatssatya-org/samsepiol-bom`](https://github.com/thatssatya-org/samsepiol-bom) as the central Maven dependency-management source. Application modules declare no unmanaged versions for dependencies covered by the BOM.
+- Use [`thatssatya-org/samsepiol-library`](https://github.com/thatssatya-org/samsepiol-library) for MongoDB, HTTP clients, caching, locks, Temporal, and every other supported infrastructure abstraction. A portfolio module must not bypass it with a new direct client, repository implementation, or competing wrapper. If an integration needs a stack the library does not support, add the abstraction to the library first, then consume its released version here.
+- Use MongoDB for all portfolio-owned persistence. Listmonk remains an exception: its upstream application requires its own internal PostgreSQL database; that database is isolated behind Listmonk and is never application persistence.
+- Application objects are immutable. Database state changes through tightly bounded persistence operations; Java service/controller/workflow/activity objects are rebuilt, never mutated in place.
+- Optimise the wire by default: BSON codecs from the shared library, indexed/filter-projected Mongo reads, compact JSON that omits null fields, conditional HTTP requests, bounded payloads, compression, and cached public read models. No unindexed Mongo query, N+1 fan-out, whole-document read where a projection suffices, or vendor call in the visitor path.
+
+### 1.2 Backend code and workflow conventions
+
+- Internal service requests/responses use `@Value`, `@Builder`, `@Jacksonized`, `@JsonInclude(JsonInclude.Include.NON_NULL)`, and `@JsonIgnoreProperties(ignoreUnknown = true)`. Controller DTOs and Temporal workflow/activity requests/responses use the same serialisation contract. Every required reference field carries Lombok `@NonNull`; absence is represented by the endpoint contract, not a nullable object graph, unless an explicit exception is approved.
+- Mongo entities use immutable Lombok/BSON construction consistent with the shared library: `@EqualsAndHashCode(callSuper = true)`, `@Value`, `@SuperBuilder(toBuilder = true)`, `@Jacksonized`, `@JsonInclude(JsonInclude.Include.NON_NULL)`, `@JsonIgnoreProperties(ignoreUnknown = true)`, `@AllArgsConstructor(onConstructor_ = {@BsonCreator})`, and `@NonNull` for required fields. They extend the library `Entity` and declare an unambiguous collection-specific ID prefix. The library codec registry is mandatory.
+- Use Temporal through the shared library for workflows that coordinate Mongo persistence with external side effects or need compensation/retry semantics. Workflows and activities only orchestrate deterministic steps; business logic lives in clearly named Spring services invoked by activities. A multi-document/externally visible transition must be durable and recoverable, not an in-memory sequence.
+- Prefer small, readable Spring services. When a service gains multiple policies or provider-specific branches, split it using LLD. No explanatory comments: class, method, and request/response names must explain the behaviour.
+- Provider and capability implementations use a Strategy interface with an enum returned by that same interface, then a factory builds an immutable `EnumMap` from the injected bean list at startup. This creates an explicit fail-fast registry, avoids string dispatch, and permits a new vendor/capability to be added without changing public orchestration code.
 
 ## 2. Discovery: existing presence and content inventory
 
@@ -115,6 +133,7 @@ Nothing is published merely because a vendor account or repository is discoverab
 
 ### 4.3 Visual and interaction direction
 
+- Before frontend implementation, follow this repository's `SKILL.md` design process: define the portfolio's concrete audience and single job, create/review a distinctive token system and wireframe, then implement the approved direction. The current repository skill is the local authority for frontend design decisions.
 - Dark-first, closely echoing the current black/charcoal hub surface and compact centered card rhythm, but honour system light mode and provide an explicit theme toggle.
 - Dense-but-calm engineering aesthetic: command-line accents, restrained motion, readable long-form case studies. No fake terminal, excessive particle field, or client-side animation tax.
 - Self-host all fonts and static media. Use system UI fallback and `font-display: swap`.
@@ -186,6 +205,14 @@ Nothing is published merely because a vendor account or repository is discoverab
 - Prefer a small authenticated operations UI only after v1; v1 can expose management through protected Actuator/CLI operations.
 - Every mutation is auditable with timestamp, source, and actor. Never offer public content management.
 
+### FR-10: generic provider profiles and component availability
+
+- Model every integration as an operator-owned `ProviderProfile`: provider type, approved public handle/link, enabled capabilities, encrypted credential reference, refresh policy, and display policy. A profile can be absent, disabled, connected but awaiting approval, stale, or healthy without changing application code or frontend routes.
+- Separate a vendor **capability** (for example `GITHUB_ACTIVITY`, `SPOTIFY_ON_REPEAT`, `YOUTUBE_UPLOADS`, `INSTAGRAM_MEDIA`) from its rendered **component**. The public API publishes a cacheable capability manifest containing only enabled, safe-to-display cards and their component type, data endpoint, ordering, source label, and last-refresh metadata. The Astro frontend maps known component types to islands; unavailable capabilities render nothing, never empty error chrome.
+- The generic capability read endpoint returns `200 OK` with a typed snapshot only when a profile is enabled and a public-safe snapshot exists. When the profile/capability is missing, disabled, not authorised, deliberately hidden, or has no approved snapshot, return **`204 No Content`** with no response body. Generated frontend clients map this to `null`/absence and continue rendering the page. Do not turn an optional integration into a `404`, `500`, exception trace, or retry storm.
+- A provider outage after a valid snapshot exists serves that timestamped last-known-good snapshot with `200 OK`; an actual public API request failure uses a minimal RFC 9457 problem response without tokens, account identifiers, upstream bodies, or stack traces. Rate limiting and validation failures retain their correct status codes.
+- New vendors require only: a profile enum value, a capability enum value, a library-supported HTTP/infrastructure dependency, a Strategy bean, snapshot mapper, projected Mongo persistence, and a frontend component registration if a new visual primitive is genuinely needed. Reuse existing components for equivalent card shapes.
+
 ## 6. Vendor integration matrix
 
 | Source | Desired public output | Supported approach | Data freshness | Constraint / fallback |
@@ -198,6 +225,8 @@ Nothing is published merely because a vendor account or repository is discoverab
 | Listmonk | email subscription | backend-to-internal Listmonk API | immediate | Self-hosted double opt-in; Listmonk never public |
 | Homelab | safe aggregate story/status | Tailnet collector → signed private API snapshot | 15–60 min + delayed publish | No reverse proxy into private systems, no live diagnostics |
 
+The capability manifest is vendor-neutral. A self-hosted operator may enable only GitHub and newsletter, or any approved subset; the same frontend responds to the manifest rather than to a build-time list of Satyajit-specific providers.
+
 Provider policies change. Before shipping each connector, verify scopes, app review, rate limits, branding requirements, and permitted storage/display against the vendor’s current official documentation.
 
 ## 7. Technical architecture
@@ -209,8 +238,8 @@ Visitor
 Nginx Proxy Manager (public edge; TLS, headers, rate limits)
   ├── web: Astro static files
   └── api: Spring Boot public API
-         ├── PostgreSQL: content, cache snapshots, audit metadata
-         ├── internal Listmonk API + its PostgreSQL database
+         ├── MongoDB: content, cache snapshots, provider profiles, and audit metadata
+         ├── internal Listmonk API + Listmonk's isolated PostgreSQL database
          ├── scheduled provider adapters → GitHub / Spotify / Meta / YouTube / LinkedIn
          └── private Tailnet-only aggregate collector endpoint
 
@@ -222,16 +251,18 @@ Owner / ops ── Tailscale ──► protected operations path
 - **Astro + TypeScript:** static route generation, Markdown/MDX case studies, content collections, image optimisation, RSS, sitemap, and JSON-LD.
 - **React 19 islands:** newsletter form, filter controls, and small cached activity widgets. Hydrate only on visibility/interaction.
 - **Tailwind CSS:** local build output; component tokens for colour, spacing, and typography. Use accessible primitives where necessary rather than a heavyweight UI suite.
-- **OpenAPI-generated client:** derive the tiny public API client from the Spring Boot OpenAPI document; no duplicated hand-written DTOs.
+- **OpenAPI-generated client:** derive the tiny public API client from the Spring Boot OpenAPI document; no duplicated hand-written DTOs. The client treats documented `204 No Content` capability responses as `null`, not exceptions.
+- **Component registry:** render cards from the backend capability manifest, mapping stable generic component types to small islands. The public build works unchanged for an operator that has not configured Spotify, Meta, LinkedIn, YouTube, or any future optional vendor.
 - **Performance budget:** initial HTML/CSS/critical JS under 150 KB compressed excluding images; no third-party analytics/trackers; LCP under 2.5 s on a mid-tier mobile profile; no render-blocking social embeds.
 
 ### 7.2 Backend
 
-- **Java 25 LTS, Spring Boot current stable, Maven:** Spring MVC, Validation, Security, WebClient, Actuator, and scheduling. Use virtual threads only for bounded blocking integration calls; never schedule unbounded work on request threads.
-- **PostgreSQL + Flyway:** owner-managed content overrides, normalised external snapshot metadata, sync state, consent audit data, and idempotency keys. Prefer jOOQ/JDBC-style projections for public read models; no speculative ORM graph loading.
-- **Provider adapter boundary:** one interface per provider, strict DTO mapping, `ETag`/`If-None-Match` where supported, timeout/retry/backoff/circuit-breaker policy, and a persisted last-success snapshot.
-- **Cache model:** a visitor reads PostgreSQL/Caffeine cache only. Scheduled syncs update snapshots out of band. Start without Redis; add it only when replicas or workload make it necessary.
-- **API contract:** OpenAPI 3.1; RFC 9457 problem responses; immutable response DTOs; ISO-8601 timestamps; pagination where arrays can grow; `Cache-Control` and `ETag` headers.
+- **Java 25 LTS, Spring Boot current stable, Maven:** import the Samsepiol BOM and consume the Samsepiol library abstractions for MVC-adjacent integration concerns, MongoDB, HTTP, cache, locks, and Temporal. Use virtual threads only for bounded blocking integration calls; never schedule unbounded work on request threads.
+- **MongoDB + shared codec registry:** persist owner content overrides, normalised external snapshots, sync state, provider profiles, consent-audit correlations, and idempotency keys as versioned documents. Define indexes before query code, retrieve only BSON projections required by public read models, and use the library codecs rather than reflection-heavy generic mapping. No speculative document hydration.
+- **Provider adapter boundary:** one Strategy interface per generic capability, with its capability enum exposed by the interface and an immutable enum-keyed factory registry built from injected beans. Strict DTO mapping, `ETag`/`If-None-Match` where supported, timeout/retry/backoff/circuit-breaker policy, and a persisted last-success snapshot are mandatory.
+- **Cache model:** a visitor reads a projected Mongo snapshot/Caffeine cache only. Scheduled syncs update snapshots out of band. Start without Redis; introduce it through the shared library only when replicas or workload make it necessary.
+- **Durable coordination:** use Temporal workflows for Mongo-plus-external transitions such as provider connection/revocation, token rotation, newsletter hand-off, and collector snapshot publication. Workflows and activities orchestrate; Spring services own the business rules and persistence operations.
+- **API contract:** OpenAPI 3.1; RFC 9457 problem responses for failures; `204 No Content` for an unconfigured/hidden/empty optional capability; immutable response DTOs; ISO-8601 timestamps; pagination where arrays can grow; `Cache-Control`, compact JSON, compression, and `ETag` headers.
 - **Observability:** JSON logs with PII redaction, private `/actuator` endpoints, Prometheus metrics on the internal network, and alerting for failed syncs/token expiry—not raw visitor browsing data.
 
 ### 7.3 Public API surface
@@ -240,6 +271,8 @@ Owner / ops ── Tailscale ──► protected operations path
 | --- | --- | --- | --- |
 | `/api/v1/profile` | GET | 1 day | owner-approved public identity/links |
 | `/api/v1/projects` | GET | 1 h | curated projects with cached GitHub enrichment |
+| `/api/v1/capabilities` | GET | 1 h | vendor-neutral manifest of enabled public components; missing profiles are omitted |
+| `/api/v1/capabilities/{capability}` | GET | 15 min–6 h | typed cached snapshot; `204` when optional capability is not configured, hidden, unauthorised, or empty |
 | `/api/v1/activity/github` | GET | 15 min | grouped public activity and contribution summary |
 | `/api/v1/music/on-repeat` | GET | 1 h | curated/cached, no live playback |
 | `/api/v1/social/{instagram,youtube,linkedin}` | GET | 1–6 h | only sources enabled by owner |
@@ -247,7 +280,7 @@ Owner / ops ── Tailscale ──► protected operations path
 | `/api/v1/newsletter/subscriptions` | POST | no-store | strict validation/rate limiting/idempotency |
 | `/api/v1/healthz` | GET | no-store | liveness only; no dependency or version details |
 
-Internal collector/admin endpoints use a separate route, network policy, authentication realm, and audit log. They are not variations of the public API.
+The provider-specific legacy/readability endpoints above are convenience aliases over the same generic capability services; they never own divergent data-fetching code. The frontend prefers `/capabilities` and its component data endpoints so a self-hosted instance can add/remove vendors without a frontend rebuild. Internal collector/admin endpoints use a separate route, network policy, authentication realm, and audit log. They are not variations of the public API.
 
 ## 8. Security, privacy, and resilience requirements
 
@@ -258,22 +291,22 @@ Internal collector/admin endpoints use a separate route, network policy, authent
 5. **Data minimisation:** collect only newsletter email + consent evidence. Do not install behavioural analytics. Use privacy-friendly aggregate server logs with a short documented retention window.
 6. **Homelab isolation:** no Docker socket, NPM admin, Listmonk admin, database, Actuator, or private service route may be published through the portfolio vhost. The aggregate collector is outbound/private, signed, replay-protected, and field-allow-listed.
 7. **Availability:** each connector has a hard timeout, bounded retries with jitter, circuit breaking, and stale-while-revalidate output. A vendor outage becomes a “last updated” card—not a slow or broken homepage.
-8. **Backups:** encrypted PostgreSQL backups, off-device copy, restore test cadence, and an owner runbook. Backups must include Listmonk data and application configuration but exclude ephemeral external cache when recovery does not need it.
+8. **Backups:** encrypted MongoDB backups, off-device copy, restore test cadence, and an owner runbook. Backups must include the isolated Listmonk PostgreSQL database and application configuration but can exclude recoverable external cache snapshots when recovery does not need them.
 9. **Supply chain:** pinned container image digests in production, SBOM generation, dependency updates, Trivy/Grype image scanning, Semgrep/CodeQL, and CI secret scanning. Do not use `:latest` in the portfolio stack.
 
 ## 9. Data model (minimum)
 
-| Table / entity | Purpose | Sensitive fields |
+| Mongo collection / entity | Purpose | Sensitive fields |
 | --- | --- | --- |
 | `site_content` | versioned owner-approved profile, social links, must-listen feature, right-now entries, now text, feature flags | none unless contact copy contains it |
 | `project` / `project_link` | curated project descriptions and external links | none |
-| `external_snapshot` | normalised public card payload, ETag, fetched/valid-until timestamps, source status | potentially provider identifiers |
-| `provider_connection` | OAuth provider connection and encrypted token envelope | encrypted credentials only |
+| `external_snapshot` | normalised capability payload, ETag, fetched/valid-until timestamps, source status, and schema version | potentially provider identifiers |
+| `provider_profile` | provider type, public-profile metadata, enabled capabilities, encrypted token envelope, display policy, and refresh state | encrypted credentials only |
 | `newsletter_request` | idempotency/consent-audit correlation, not mailing list authority | hashed email/correlation metadata |
 | `homelab_summary` | allow-listed, delayed aggregate snapshot | no topology or device identifiers |
 | `audit_event` | owner actions and operational changes | actor identity/internal IP, retained narrowly |
 
-Listmonk remains the subscription system of record. The portfolio database must not create a second unbounded mailing-list copy.
+Every collection has an explicit ID prefix, a schema version, retention policy, and indexes derived from its query paths. Listmonk remains the subscription system of record. The portfolio MongoDB must not create a second unbounded mailing-list copy.
 
 ## 10. Delivery plan
 
@@ -285,13 +318,13 @@ Listmonk remains the subscription system of record. The portfolio database must 
 
 ### Phase 1 — static portfolio foundation
 
-1. Scaffold Astro frontend and Spring Boot API as separate apps in this repository.
+1. Scaffold Astro frontend and Spring Boot API as separate apps in this repository. The backend imports `samsepiol-bom` and consumes released `samsepiol-library` modules before any portfolio feature code is added.
 2. Implement the semantic homepage, projects, now, uses, privacy, RSS/sitemap/JSON-LD, theme, and accessibility/performance budgets.
-3. Add Docker Compose for local development and production, reverse-proxy configuration, health checks, backups, CI, and a staging hostname.
+3. Add Docker Compose for local development and production, MongoDB with the library codec configuration, reverse-proxy configuration, health checks, backups, CI, and a staging hostname. Keep Listmonk and its mandated PostgreSQL data volume on an internal-only network.
 
 ### Phase 2 — first-party data and GitHub
 
-1. Build public profile/projects API and GitHub adapter with snapshots, ETags, rate-limit handling, and owner curation overrides.
+1. Build the generic provider-profile/capability registry, capability-manifest API, and GitHub Strategy adapter with Mongo snapshots, indexes, projections, ETags, rate-limit handling, and owner-curation overrides.
 2. Add Listmonk double opt-in integration, email-safe logs, unsubscribe flow, rate limits, and consent tests.
 3. Launch with only the static/site-content, GitHub, and newsletter surface if all checks pass.
 
@@ -305,7 +338,7 @@ Listmonk remains the subscription system of record. The portfolio database must 
 
 1. Define and approve the aggregate homelab schema and diagram.
 2. Implement Tailnet collector signing/replay protection and delayed public snapshot.
-3. Add a Tailnet-only operations interface/CLI, provider token-expiry alerts, restore drill, and incident runbooks.
+3. Add a Tailnet-only operations interface/CLI, provider token-expiry alerts, Temporal-backed durable workflows for external/Mongo coordination, restore drill, and incident runbooks.
 
 ## 11. Definition of done / acceptance criteria
 
@@ -314,13 +347,18 @@ Listmonk remains the subscription system of record. The portfolio database must 
 - [ ] Lighthouse targets meet 95+ Performance, Accessibility, Best Practices, and SEO on the public homepage under the chosen test profile.
 - [ ] Core narrative pages render correctly without JavaScript; live cards degrade to timestamped links.
 - [ ] GitHub activity is cached and a vendor outage cannot delay page render or produce a server 500.
+- [ ] An unconfigured, disabled, hidden, unauthorised, or empty optional provider capability returns `204 No Content`; the frontend omits its component without an error state. Healthy stale snapshots continue with source/refresh metadata.
+- [ ] The public capability manifest and frontend component registry work for an arbitrary self-hosted operator profile; no Satyajit-specific provider account, URL, token, or component list is compiled into the application.
+- [ ] Backend dependency versions are governed by `samsepiol-bom`, and MongoDB/HTTP/cache/locks/Temporal consume `samsepiol-library` abstractions only. No direct replacement infrastructure client or unindexed Mongo read exists.
+- [ ] Backend DTOs, Mongo entities, Temporal messages, and controller messages meet the immutable Lombok/Jackson/BSON conventions in section 1.2; required object fields use `@NonNull`.
+- [ ] Temporal workflows/activities contain orchestration only; durable business rules live in Spring services and recover multi-step Mongo/external transitions.
 - [ ] All social integrations use official vendor APIs or clearly marked manual links. No scraping code or unaudited feed widget exists.
 - [ ] Spotify output is owner-approved and never exposes current playback by default.
 - [ ] Newsletter is self-hosted, double opt-in, unsubscribe-capable, rate-limited, and has passing consent/PII log tests.
 - [ ] A port/path scan confirms admin, database, Actuator, Listmonk, Docker, and Tailnet services are not exposed by the public vhost.
 - [ ] Homelab output contains only the approved aggregate schema; tests reject identifiers, addresses, ports, URLs, version strings, and arbitrary collector fields.
 - [ ] Secrets scanning, dependency/image scanning, SAST, unit tests, integration tests, OpenAPI compatibility checks, and container health checks pass in CI.
-- [ ] PostgreSQL and Listmonk restore has been rehearsed on an isolated host.
+- [ ] MongoDB and the isolated Listmonk PostgreSQL restore have been rehearsed on an isolated host.
 
 ## 12. Risks and decisions requiring owner input
 
