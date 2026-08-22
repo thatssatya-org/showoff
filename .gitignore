@@ -1,0 +1,13 @@
+# Runtime and build output
+.env
+.env.*
+!.env.example
+node_modules/
+dist/
+target/
+*.log
+
+# Local secrets and persistent volumes
+secrets/
+data/
+postgres-data/
