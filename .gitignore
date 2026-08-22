@@ -11,3 +11,7 @@ target/
 secrets/
 data/
 postgres-data/
+apps/web/.astro/
+apps/web/coverage/
+apps/api/.mvn/
+apps/api/target/

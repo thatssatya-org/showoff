@@ -1,13 +1,13 @@
 # Self-hosted personal portfolio — requirements and implementation plan
 
 **Owner:** Satyajit Roy (`thatssatya`)
-**Status:** Planning
-**Last audited:** 2026-08-23 (link hub screenshot reviewed)
+**Status:** Final implementation baseline
+**Last finalised:** 2026-08-23 (link hub screenshot and platform contracts reviewed)
 **Scope:** A public personal portfolio with a static-first frontend and a Java backend that safely aggregates selected external activity.
 
 ## 1. Executive decision
 
-Build a static-first portfolio using **Astro (latest stable), TypeScript, React islands, and Tailwind CSS**, served as immutable files, plus a separate **Java 25 LTS / Spring Boot (current stable) API**. The API owns OAuth, vendor synchronisation, caching, subscriptions, and the small amount of mutable data. It must never make a vendor request in the visitor request path.
+Build a static-first portfolio using **Astro (latest stable), TypeScript, React islands, and Tailwind CSS**, served as immutable files, plus a separate **Java / Spring Boot API governed by the released Samsepiol BOM**. The API owns OAuth, vendor synchronisation, caching, subscriptions, and the small amount of mutable data. It must never make a vendor request in the visitor request path.
 
 This is the best fit for a portfolio in 2026:
 
@@ -23,6 +23,7 @@ The public site will be a **curated work record**, not a social-media firehose a
 The backend is an instance-configurable product: each self-hosting operator supplies their own approved public profile, content, vendor handles, OAuth credentials/tokens, and enabled capabilities. It is **not** a multi-tenant hosted service; one deployment has one owner and one isolated set of secrets/data. No account, handle, profile URL, provider capability, or content card is hard-coded for Satyajit.
 
 - Use [`thatssatya-org/samsepiol-bom`](https://github.com/thatssatya-org/samsepiol-bom) as the central Maven dependency-management source. Application modules declare no unmanaged versions for dependencies covered by the BOM.
+- The public BOM audit currently declares Java 21/Spring Boot 3.3.4. Do not claim Java 25/current-Spring support in this application until the BOM publishes that upgrade; target the released BOM selected by the operator.
 - Use [`thatssatya-org/samsepiol-library`](https://github.com/thatssatya-org/samsepiol-library) for MongoDB, HTTP clients, caching, locks, Temporal, and every other supported infrastructure abstraction. A portfolio module must not bypass it with a new direct client, repository implementation, or competing wrapper. If an integration needs a stack the library does not support, add the abstraction to the library first, then consume its released version here.
 - Use MongoDB for all portfolio-owned persistence. Listmonk remains an exception: its upstream application requires its own internal PostgreSQL database; that database is isolated behind Listmonk and is never application persistence.
 - Application objects are immutable. Database state changes through tightly bounded persistence operations; Java service/controller/workflow/activity objects are rebuilt, never mutated in place.
@@ -257,7 +258,7 @@ Owner / ops ── Tailscale ──► protected operations path
 
 ### 7.2 Backend
 
-- **Java 25 LTS, Spring Boot current stable, Maven:** import the Samsepiol BOM and consume the Samsepiol library abstractions for MVC-adjacent integration concerns, MongoDB, HTTP, cache, locks, and Temporal. Use virtual threads only for bounded blocking integration calls; never schedule unbounded work on request threads.
+- **Java/Spring Boot version selected by the released Samsepiol BOM, Maven:** import the Samsepiol BOM and consume the Samsepiol library abstractions for MVC-adjacent integration concerns, MongoDB, HTTP, cache, locks, and Temporal. Use virtual threads only for bounded blocking integration calls; never schedule unbounded work on request threads.
 - **MongoDB + shared codec registry:** persist owner content overrides, normalised external snapshots, sync state, provider profiles, consent-audit correlations, and idempotency keys as versioned documents. Define indexes before query code, retrieve only BSON projections required by public read models, and use the library codecs rather than reflection-heavy generic mapping. No speculative document hydration.
 - **Provider adapter boundary:** one Strategy interface per generic capability, with its capability enum exposed by the interface and an immutable enum-keyed factory registry built from injected beans. Strict DTO mapping, `ETag`/`If-None-Match` where supported, timeout/retry/backoff/circuit-breaker policy, and a persisted last-success snapshot are mandatory.
 - **Cache model:** a visitor reads a projected Mongo snapshot/Caffeine cache only. Scheduled syncs update snapshots out of band. Start without Redis; introduce it through the shared library only when replicas or workload make it necessary.
@@ -391,3 +392,13 @@ Every collection has an explicit ID prefix, a schema version, retention policy, 
 - GitHub public profile: `https://github.com/thatssatya`.
 
 This document is a requirements baseline. It deliberately does not include provider secrets, private service details, or unapproved public claims.
+
+### Implementation authority
+
+For implementation, this document is read with:
+
+- `docs/VENDOR_CREDENTIALS.md` — exact credential/configuration inventory and secret boundary;
+- `docs/FRONTEND_IMPLEMENTATION_SPEC.md` — frontend design, rendering, API, quality, and test contract;
+- `docs/BACKEND_IMPLEMENTATION_SPEC.md` — Samsepiol platform, MongoDB, Temporal, generic capability API, security, and TDD contract.
+
+If documents conflict, security/privacy rules win, then the backend/frontend implementation specifications, then this baseline. A vendor feature without official approved access remains a manual deep link/card; it is never replaced by scraping.
