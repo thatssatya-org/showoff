@@ -2,7 +2,7 @@
 
 **Owner:** Satyajit Roy (`thatssatya`)
 **Status:** Planning
-**Last audited:** 2026-08-23
+**Last audited:** 2026-08-23 (link hub screenshot reviewed)
 **Scope:** A public personal portfolio with a static-first frontend and a Java backend that safely aggregates selected external activity.
 
 ## 1. Executive decision
@@ -22,20 +22,23 @@ The public site will be a **curated work record**, not a social-media firehose a
 
 ### 2.1 Existing link hub
 
-`https://bio.link/thatssatya` is currently a minimal profile-led link hub for **Satyajit Roy**. The accessible rendered representation confirms:
+`https://bio.link/thatssatya` is a minimal, dark, profile-led link hub for **Satyajit Roy**, with the public descriptor **“Code | Music | Bikes | Cats”**. A supplied visual reference confirms this information architecture:
 
-- profile image and name;
-- an email-list call to action;
-- verification before subscription (double opt-in);
-- a thank-you confirmation state and an unsubscribe flow.
+| Hub element | Observed content | Migration requirement |
+| --- | --- | --- |
+| Identity masthead | Avatar, `Satyajit Roy`, and `Code | Music | Bikes | Cats` | Preserve the concise identity line; make it editable owner content, not hard-coded decoration. |
+| Subscription affordance | Prominent `Subscribe` button in the masthead | Retain a top-of-page subscription action and a dedicated newsletter route; it must lead to the self-hosted double-opt-in flow. |
+| Social rail | Spotify, X, Instagram, LinkedIn, GitHub, email, a support/creator-link icon, and YouTube | Retain every verified destination, in this order by default. Use labelled, accessible links rather than icon-only controls; confirm the ambiguous support/creator destination with the owner before publishing. |
+| `Must listen` | One large Spotify card: `Shaukeens` | Migrate as an owner-curated featured music card with cover art and a Spotify deep link. Do not infer whether it is an album, artist, playlist, or track until its URL is verified. |
+| `Top things right now` | Three cards: `Chat with AI !`, `I'm listening to...` (Spotify), and `Aero India '23` | Treat these as a curated, ordered “right now” collection. Preserve their ability to use a thumbnail, title, destination, and optional source badge. |
 
-The upstream site put a Cloudflare challenge in front of automated requests and the available browser control was disabled, so the individual link-card destinations could not be reliably enumerated during this audit. They must be copied once, manually verified, into the initial content configuration before launch—do not guess or silently discard them.
+The upstream site put a Cloudflare challenge in front of automated requests, so individual card destinations could not be programmatically verified. The screenshot is authoritative for the visible titles and structure; the owner must approve the exact URLs, the seventh social-link destination, and any card metadata before launch—do not guess or silently discard them.
 
 The requested direction and public GitHub profile establish the link categories the replacement must support:
 
 - professional identity and current role;
 - GitHub profile, recent public contribution activity, selected repositories, and personal projects;
-- Spotify listening, especially a deliberately shared **On Repeat** snapshot;
+- Spotify listening, including the existing **Shaukeens** feature, the current `I'm listening to...` link, and a deliberately shared **On Repeat** snapshot;
 - Instagram public profile posts/Reels;
 - LinkedIn profile, current job/“now” status, and selected posts;
 - YouTube channel uploads/Shorts and channel links;
@@ -55,7 +58,8 @@ The portfolio must describe those capabilities at a high level. It must not publ
 Create `apps/web/src/content/site.ts` (or a CMS record) from a short owner-approved source of truth containing:
 
 - approved name, one-line bio, longer bio, avatar, timezone/location precision, and contact route;
-- exact existing hub links and their display order;
+- exact existing hub links and their display order, including the social rail and the ambiguous support/creator link;
+- a `mustListen` feature and ordered `rightNow` entries, each with title, thumbnail/cover-art licence or source, destination URL, source badge, visibility, and optional expiry;
 - canonical URLs/handles for Spotify, Instagram, LinkedIn, YouTube, GitHub, and email;
 - selected projects, featured repositories, outcomes, screenshots, and tech tags;
 - approved homelab display name, node role labels, service categories, and public-safe statistics;
@@ -99,18 +103,19 @@ Nothing is published merely because a vendor account or repository is discoverab
 
 ### 4.2 Homepage order
 
-1. Short identity: backend engineer, fintech systems, Java/Spring Boot, MongoDB/DocumentDB, Temporal, and self-hosting.
-2. A current “building / learning / listening” strip. The owner decides what is public.
-3. Featured projects—manual case-study metadata wins over repository popularity.
-4. Recent GitHub public activity and a contribution heat-map summary.
-5. Music card: a chosen On Repeat snapshot, not a live playback tracker.
-6. Selected social cards where official APIs are available, with graceful deep links when they are not.
-7. Homelab preview: capability categories, safe aggregate capacity/uptime labels, and a link to `/homelab`.
-8. Newsletter signup and direct links.
+1. Compact identity masthead: avatar, name, **“Code | Music | Bikes | Cats”**, an accessible labelled social rail, and a visible Subscribe button.
+2. `Must listen`: the owner-curated **Shaukeens** Spotify card, followed by the cached On Repeat snapshot where enabled. Neither is a live playback tracker.
+3. `Top things right now`: the ordered curated cards initially seeded with **Chat with AI !**, **I'm listening to...**, and **Aero India '23**. The collection supports a thumbnail, source badge, expiry, and deep link.
+4. A current “building / learning” strip. The owner decides what is public.
+5. Featured projects—manual case-study metadata wins over repository popularity.
+6. Recent GitHub public activity and a contribution heat-map summary.
+7. Selected social cards where official APIs are available, with graceful deep links when they are not.
+8. Homelab preview: capability categories, safe aggregate capacity/uptime labels, and a link to `/homelab`.
+9. Newsletter signup and direct links.
 
 ### 4.3 Visual and interaction direction
 
-- Dark-first, but honour system light mode and provide an explicit theme toggle.
+- Dark-first, closely echoing the current black/charcoal hub surface and compact centered card rhythm, but honour system light mode and provide an explicit theme toggle.
 - Dense-but-calm engineering aesthetic: command-line accents, restrained motion, readable long-form case studies. No fake terminal, excessive particle field, or client-side animation tax.
 - Self-host all fonts and static media. Use system UI fallback and `font-display: swap`.
 - Semantic landmarks, keyboard navigation, visible focus, reduced-motion support, colour contrast meeting WCAG 2.2 AA, descriptive alternative text, and no information conveyed by colour alone.
@@ -121,7 +126,8 @@ Nothing is published merely because a vendor account or repository is discoverab
 ### FR-1: identity, links, and content
 
 - Render approved profile, links, and contact options from version-controlled content or an internal-only editor.
-- Preserve all verified current link-hub destinations after the owner approves migration.
+- Render a masthead subscription CTA; an accessible, labelled social rail; one `must listen` feature; and an ordered `top things right now` collection. These are content types, not bespoke homepage markup.
+- Preserve all verified current link-hub destinations, visible labels, and default ordering after the owner approves migration. Seed the current known content: `Shaukeens`; `Chat with AI !`; `I'm listening to...`; and `Aero India '23`.
 - Generate canonical URLs, Open Graph/Twitter cards, `Person`, `WebSite`, `ProfilePage`, and `CreativeWork` JSON-LD.
 - Provide RSS/Atom for public “now” updates and case studies; no tracking pixels.
 
@@ -259,7 +265,7 @@ Internal collector/admin endpoints use a separate route, network policy, authent
 
 | Table / entity | Purpose | Sensitive fields |
 | --- | --- | --- |
-| `site_content` | versioned owner-approved profile, links, now text, feature flags | none unless contact copy contains it |
+| `site_content` | versioned owner-approved profile, social links, must-listen feature, right-now entries, now text, feature flags | none unless contact copy contains it |
 | `project` / `project_link` | curated project descriptions and external links | none |
 | `external_snapshot` | normalised public card payload, ETag, fetched/valid-until timestamps, source status | potentially provider identifiers |
 | `provider_connection` | OAuth provider connection and encrypted token envelope | encrypted credentials only |
@@ -273,8 +279,8 @@ Listmonk remains the subscription system of record. The portfolio database must 
 
 ### Phase 0 — content and domain decisions
 
-1. Verify and copy every existing link-hub destination; choose canonical domain and redirect policy.
-2. Approve profile wording, professional disclosure, social handles, featured projects, homelab-safe fields, and privacy text.
+1. Verify and copy every existing link-hub destination; confirm the support/creator social icon, the URLs/types of `Shaukeens`, `Chat with AI !`, `I'm listening to...`, and `Aero India '23`; choose canonical domain and redirect policy.
+2. Approve profile wording—including `Code | Music | Bikes | Cats`—professional disclosure, social handles, featured projects, right-now entries, homelab-safe fields, and privacy text.
 3. Create vendor applications only for integrations worth the review/maintenance cost. Start with GitHub, newsletter, and manually curated content.
 
 ### Phase 1 — static portfolio foundation
@@ -304,6 +310,7 @@ Listmonk remains the subscription system of record. The portfolio database must 
 ## 11. Definition of done / acceptance criteria
 
 - [ ] Every old hub destination has been manually verified, retained, redirected, or explicitly retired by the owner.
+- [ ] The homepage preserves the existing hub’s identity masthead, top-level Subscribe action, social rail, `Must listen` entry, and ordered `Top things right now` collection—with accessible labels and owner-approved URLs.
 - [ ] Lighthouse targets meet 95+ Performance, Accessibility, Best Practices, and SEO on the public homepage under the chosen test profile.
 - [ ] Core narrative pages render correctly without JavaScript; live cards degrade to timestamped links.
 - [ ] GitHub activity is cached and a vendor outage cannot delay page render or produce a server 500.
@@ -341,7 +348,7 @@ Listmonk remains the subscription system of record. The portfolio database must 
 
 ### Audit notes
 
-- Existing link hub: `https://bio.link/thatssatya` (profile + email-list/double-opt-in states observed; individual link cards not retrievable through the challenge during this audit).
+- Existing link hub: `https://bio.link/thatssatya` (profile + email-list/double-opt-in states observed; the supplied screenshot confirms the masthead, social rail, `Shaukeens`, `Chat with AI !`, `I'm listening to...`, and `Aero India '23`; individual destinations remain unverified due to the challenge).
 - Homelab reference: `https://github.com/thatssatya-org/docker-composes` at commit `5e75886d8ddbea6b710f7f1d38f6a2d953f00aef`.
 - GitHub public profile: `https://github.com/thatssatya`.
 
