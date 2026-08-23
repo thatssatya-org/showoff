@@ -36,7 +36,7 @@ Library module artifacts: library-core, library-application, repository-models,
 Reference implementation: thatssatya-org/file-nexus
 ```
 
-The public repository audit on 2026-08-23 found BOM `0.0.5-BOM-SNAPSHOT` declaring Java 21 and Spring Boot 3.3.4, while the library root was `0.0.4-LIBRARY-SNAPSHOT`. These are **not** permission to hard-code snapshots, claim Java 25 support, or guess a Maven repository. Before implementation, the operator must provide a resolvable released version/repository pair. The API uses the Java/Spring level dictated by that released BOM. A Java 25/Spring upgrade belongs in a BOM release first.
+The public repository audit on 2026-08-23 found BOM `0.0.5-BOM-SNAPSHOT` declaring Java 21 and Spring Boot 3.3.4, while the library root was `0.0.4-LIBRARY-SNAPSHOT`. Showoff has a narrow local-development exception: it may resolve those already-installed snapshot coordinates for local builds and local Compose verification. The exception is not a release version, must not be published to a remote repository, and must be replaced by a released BOM-governed pair before an image is promoted. The API uses the Java/Spring level dictated by the selected BOM. A Java 25/Spring upgrade belongs in a BOM release first.
 
 ### 2.2 Required project layout
 
@@ -111,7 +111,28 @@ The GitHub PAT write command is an immutable, size-bounded request accepted only
 
 The GitHub refresh service resolves the enabled GitHub provider profile through a projected repository read and calls `TokenManagementService.useForInternalIntegration(...)` with the same server-owned storage context. The library decrypts the envelope only for the callback scope; the service invokes the shared-library HTTP client against GitHub’s allow-listed host and the library clears its local plaintext buffers afterward. Controllers, public DTOs, capability snapshots, workflow histories, and browser code cannot access it. Revocation/rotation follows the same write-only command path; a disabled/missing profile results in the normal public `204` capability behaviour.
 
-**Release gate:** the PAT command cannot ship until `samsepiol-library` publishes a released `token-management` module and the BOM governs that version. Do not add direct `Cipher`, AES-GCM, keystore, crypto wrapper, token entity/repository, or ad-hoc bearer-token guard code in the portfolio application. `token-management` owns envelope construction, key-ID/algorithm/nonce metadata, rotation, Mongo persistence, and default-deny management authorization; this application only supplies trusted upstream identity, server-owned storage context, and the released interfaces.
+**Local snapshot exception:** the PAT command may be built and exercised only in local development against the installed `token-management:0.0.4-LIBRARY-SNAPSHOT` and matching local BOM. Do not add direct `Cipher`, AES-GCM, keystore, crypto wrapper, token entity/repository, or ad-hoc bearer-token guard code in the portfolio application. `token-management` owns envelope construction, key-ID/algorithm/nonce metadata, rotation, Mongo persistence, and default-deny management authorization; this application only supplies trusted upstream identity and server-owned storage context. Release/promotion remains blocked until the BOM manages a published `token-management` release.
+
+### 3.4 Operator browser and proxy boundary
+
+The credential command is not reachable through the public site route or public API. `/operator/github` is an unlinked Tailnet-only setup surface. It posts only `{ "token": "…" }` to a same-origin operator proxy alias; it does not persist, log, cache, or render the submitted value. The value is cleared from UI state after each completed attempt. The card/component boundary supports future provider OAuth setup cards without adding an OAuth route, OAuth client, or browser-held OAuth secret now.
+
+The reverse proxy rejects non-Tailnet clients for both the setup page and the write alias. Before proxying it deletes caller-supplied `Forwarded`, `X-Forwarded-*`, `X-Real-IP`, and canonical identity headers and creates the sole `X-Portfolio-Client-Address` value from its direct client connection. The API accepts that header only when `request.getRemoteAddr()` belongs to the explicit `portfolio.github-token.trusted-proxy-cidrs` configuration. It then requires the canonical address to belong to `portfolio.github-token.tailnet-cidrs`. A non-proxy caller, a malformed/multi-value canonical address, or an out-of-range client is rejected before request-body consumption. The API container is internal-only; no public/LAN route may target `/internal/**`.
+
+### 3.5 GitHub refresh adapter
+
+The scheduled GitHub adapter is an out-of-band capability strategy: projected enabled profile read; callback-only `TokenManagementService.useForInternalIntegration(...)`; an allow-listed `api.github.com` REST v3 public-events endpoint; conditional ETag requests; atomic replacement of a public-safe snapshot; and last-known-good preservation on any upstream fault. It never runs from a visitor request. The initial safe increment fetches only the eight public events and persists only event type, UTC calendar day, and public repository name. It never persists payload content, commit messages, private repository metadata, or a provider token.
+
+The installed local `http:0.0.4-LIBRARY-SNAPSHOT` exposes a redacting `HttpResponseEnvelope` with status, normalized headers, and a bounded single-consumption body. HTTP diagnostics are API-level opt-in and disabled by default; credential headers are omitted, common JSON secrets are redacted, and payload diagnostics are truncated. The GitHub adapter sends `If-None-Match`, stores `ETag`, accepts `304` without replacing the snapshot, and does not bypass the shared HTTP client with `WebClient`, a vendor SDK, or a direct HTTP client.
+
+Rate-limit parsing, quota persistence, retries, and rate-limit-aware scheduling are intentionally deferred to a separate shared-library rate-limit module. They are absent from this HTTP client and Showoff must not add an app-side substitute. GraphQL contribution-calendar/total and Easy Fintrack enrichment remain later adapter increments after their public projection contracts are individually reviewed.
+
+**Implementation status (2026-08-23):** the local snapshot implementation now provides the Tailnet-only write boundary
+and a disabled-by-default scheduled public-events refresh with projected reads, ETag persistence, conditional
+`If-None-Match` requests, `304` no-write handling, and last-known-good preservation. It has been locally Compose
+deployed with the API and web gateway healthy. The refresh remains disabled until an operator configures the approved
+profile and credential boundary. GraphQL contribution aggregates, Easy Fintrack enrichment, and the dedicated
+rate-limit module are deliberate follow-up work; a promoted image remains blocked on released BOM-managed artifacts.
 
 ## 4. Data model and MongoDB rules
 
@@ -256,7 +277,7 @@ Workflow code is deterministic orchestration only: activity invocation, identifi
 ## 8. Security and network contract
 
 - Public API allows only public GET resources, newsletter POST when enabled, health liveness, and exact OAuth callback paths. Management/Actuator/collector routes are a distinct Tailnet/private path and security filter chain. `POST /internal/v1/provider-profiles/github/pat` belongs only to that management chain; no public credential route or credential `GET` exists.
-- TLS terminates at the trusted proxy. Require trusted proxy configuration; never trust arbitrary forwarded headers.
+- TLS terminates at the trusted proxy. Require the explicit proxy CIDR configuration for management traffic; trust the canonical client address only from that proxy and never trust arbitrary forwarded headers.
 - Set strict CSP at the web tier; API applies `nosniff`, frame deny, referrer policy, HSTS only after domain/TLS validation, request body limits, and rate limiting.
 - Use UUID/opaque identifiers as appropriate; never use a provider handle to authorise an operation.
 - Allow-list outbound vendor base URLs. Reject arbitrary callback/fetch URLs. Encode all displayed upstream strings before rendering.

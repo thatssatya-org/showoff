@@ -65,8 +65,9 @@ class GitHubPatManagementControllerTest {
         var authorization = ArgumentCaptor.forClass(ManagementAuthorizationRequest.class);
         verify(tokenManagementService).create(request.capture(), storageContext.capture(), authorization.capture());
         assertThat(request.getValue().tokenCopy()).containsExactly(TOKEN.toCharArray());
-        assertThat(storageContext.getValue()).isEqualTo(new TokenStorageContext(
-                new TokenReference("portfolio", "github", "personal-access-token"), "github-token-v1"));
+        assertThat(storageContext.getValue()).isEqualTo(TokenStorageContext.builder()
+                .reference(new TokenReference("portfolio", "github", "personal-access-token"))
+                .keyId("github-token-v1").build());
         assertThat(authorization.getValue().getPrincipalId()).isEqualTo("tailnet:100.64.12.34");
         assertThat(authorization.getValue().getAttributes()).isEmpty();
     }
@@ -113,7 +114,8 @@ class GitHubPatManagementControllerTest {
                 .contentType("application/json")
                 .content(content)
                 .with(request -> {
-                    request.setRemoteAddr(remoteAddress);
+                    request.setRemoteAddr("172.30.0.2");
+                    request.addHeader(TailnetManagementAccess.CANONICAL_CLIENT_ADDRESS_HEADER, remoteAddress);
                     return request;
                 });
     }
@@ -128,7 +130,7 @@ class GitHubPatManagementControllerTest {
         @Bean
         GitHubTokenProperties gitHubTokenProperties() {
             return new GitHubTokenProperties("github-token-v1", "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
-                    List.of("100.64.0.0/10"));
+                    List.of("172.30.0.0/24"), List.of("100.64.0.0/10"));
         }
 
         @Bean

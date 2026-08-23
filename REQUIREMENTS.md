@@ -22,7 +22,7 @@ The public site will be a **curated work record**, not a social-media firehose a
 
 The backend is an instance-configurable product: each self-hosting operator supplies their own approved public profile, content, vendor handles, OAuth credentials/tokens, and enabled capabilities. It is **not** a multi-tenant hosted service; one deployment has one owner and one isolated set of secrets/data. No account, handle, profile URL, provider capability, or content card is hard-coded for Satyajit.
 
-- Use [`thatssatya-org/samsepiol-bom`](https://github.com/thatssatya-org/samsepiol-bom) as the central Maven dependency-management source. Application modules declare no unmanaged versions for dependencies covered by the BOM.
+- Use [`thatssatya-org/samsepiol-bom`](https://github.com/thatssatya-org/samsepiol-bom) as the central Maven dependency-management source. Application modules declare no unmanaged versions for dependencies covered by the BOM. Local development is a temporary, explicit exception: Showoff may resolve the installed `0.0.5-BOM-SNAPSHOT` and `0.0.4-LIBRARY-SNAPSHOT` coordinates from the operator's local Maven repository. This exception is for local builds and Compose verification only; a promoted image must use a released, BOM-governed pair.
 - The public BOM audit currently declares Java 21/Spring Boot 3.3.4. Do not claim Java 25/current-Spring support in this application until the BOM publishes that upgrade; target the released BOM selected by the operator.
 - Use [`thatssatya-org/samsepiol-library`](https://github.com/thatssatya-org/samsepiol-library) for MongoDB, HTTP clients, caching, locks, Temporal, and every other supported infrastructure abstraction. A portfolio module must not bypass it with a new direct client, repository implementation, or competing wrapper. If an integration needs a stack the library does not support, add the abstraction to the library first, then consume its released version here.
 - Use MongoDB for all portfolio-owned persistence. Listmonk remains an exception: its upstream application requires its own internal PostgreSQL database; that database is isolated behind Listmonk and is never application persistence.
@@ -205,7 +205,8 @@ Nothing is published merely because a vendor account or repository is discoverab
 ### FR-9: internal control plane
 
 - Provide an owner-only, Tailnet-restricted route or CLI to connect/revoke provider OAuth, force a sync, choose pins, hide a card, edit the “now” status, and view sync failures.
-- Prefer a small authenticated operations UI only after v1; v1 can expose management through protected Actuator/CLI operations.
+- The first operator surface is `/operator/github`, not part of public navigation or the public API. It is Tailnet-only and submits the GitHub PAT once to an operator-only same-origin proxy alias. It explicitly states that the token is only for cached GitHub sync and is cleared from browser state after every attempt. The connection-card shape is reusable for future OAuth providers, but OAuth is out of scope here.
+- The proxy strips caller-controlled forwarding/identity headers, sets one canonical client-address header from its connection peer, and only proxies the private write endpoint after a Tailnet CIDR check. The API accepts that canonical address only when its immediate peer is inside configured `trusted-proxy-cidrs`, then independently checks configured `tailnet-cidrs` before it reads the request body. The API service is never directly published on the public/LAN web surface.
 - Every mutation is auditable with timestamp, source, and actor. Never offer public content management.
 
 ### FR-10: generic provider profiles and component availability
@@ -289,7 +290,7 @@ The provider-specific legacy/readability endpoints above are convenience aliases
 
 1. **Secrets:** store OAuth client secrets, refresh tokens, webhook keys, database passwords, and Listmonk credentials as Docker secrets or a private secret manager. Never commit `.env`, do not inject secrets into frontend builds, and encrypt stored tokens using versioned AES-GCM envelope encryption with a rotateable key.
 2. **OAuth:** use state, PKCE where supported, exact redirect URIs, short-lived signed state cookies, least-privilege scopes, encrypted refresh tokens, revocation, and an internal disconnect action. Do not treat a social account handle as proof of ownership.
-3. **Edge:** TLS 1.3, HSTS after domain validation, CSP with no arbitrary third-party scripts, `frame-ancestors 'none'`, `nosniff`, referrer policy, and proxy-level body/request rate limits. Allow only `/api` and static site traffic; management is Tailnet-only.
+3. **Edge:** TLS 1.3, HSTS after domain validation, CSP with no arbitrary third-party scripts, `frame-ancestors 'none'`, `nosniff`, referrer policy, and proxy-level body/request rate limits. Public edge access is limited to `/api` and static site traffic. The unlinked `/operator/github` surface and its token proxy alias are separately Tailnet CIDR restricted; the proxy clears forwarded headers and emits the sole canonical client address consumed by the API.
 4. **Input handling:** Bean Validation with size caps and email normalisation; allow-list outbound vendor hosts; reject unexpected JSON fields; encode all text; use prepared queries; no user-controlled URL fetches.
 5. **Data minimisation:** collect only newsletter email + consent evidence when the newsletter is enabled. The GitHub publication projection may retain only the approved public activity snapshot and an anonymous private-contribution calendar/total; it must not persist or emit private repository/event metadata. Do not install behavioural analytics. Use privacy-friendly aggregate server logs with a short documented retention window.
 6. **Homelab isolation:** no Docker socket, NPM admin, Listmonk admin, database, Actuator, or private service route may be published through the portfolio vhost. The aggregate collector is outbound/private, signed, replay-protected, and field-allow-listed.
@@ -343,9 +344,24 @@ Every collection has an explicit ID prefix, a schema version, retention policy, 
 ### Phase 2 — first-party data and GitHub
 
 1. Build the generic provider-profile/capability registry, capability-manifest API, and GitHub Strategy adapter with Mongo snapshots, indexes, projections, ETags, rate-limit handling, and owner-curation overrides. Its publication projection exposes eight public events and Easy Fintrack enrichment only; the private-contribution projection is calendar/total-only with no private repository/event metadata.
-2. Before implementing the PAT command, consume the released `samsepiol-library` `token-management` module, which owns versioned Mongo token envelopes, encryption/decryption, token persistence, and the default-deny management-authorization boundary; application-level `Cipher`/AES-GCM code, token persistence, or ad-hoc bearer guard is prohibited. The Showoff management endpoint accepts only `{ "token": "…" }`; it constructs the token reference, AAD, key ID, and management identity server-side. Expose no credential read endpoint, and let only the scheduled/internal GitHub adapter invoke the library’s callback-only plaintext use path for official GitHub calls.
+2. Use the installed local `samsepiol-library:0.0.4-LIBRARY-SNAPSHOT` `token-management` module for local development only. It owns versioned Mongo token envelopes, encryption/decryption, token persistence, and the default-deny management-authorization boundary; application-level `Cipher`/AES-GCM code, token persistence, or ad-hoc bearer guard is prohibited. The Showoff management endpoint accepts only `{ "token": "…" }`; it constructs the token reference, AAD, key ID, and management identity server-side. Expose no credential read endpoint, and let only the scheduled/internal GitHub adapter invoke the library’s callback-only plaintext use path for official GitHub calls. Replace this exception with a released BOM-governed dependency pair before promoting an image.
 3. Build GitHub as the only initial dynamic capability. Defer Listmonk, its sender configuration, and all newsletter data collection until a public mail domain is approved.
 4. Launch with static/site-content and GitHub only if all checks pass.
+
+### GitHub adapter local snapshot contract
+
+The locally installed `http:0.0.4-LIBRARY-SNAPSHOT` now exposes `HttpResponseEnvelope` through `HttpClient.executeWithResponse(...)`: a single-consumption, bounded body with status and normalized headers. Its per-API request and response diagnostics are disabled by default; when enabled, credential headers are omitted, common JSON secret fields are redacted, and diagnostic payloads are truncated. Showoff uses this contract only in the disabled-by-default scheduled GitHub public-events refresh. It sends `If-None-Match`, persists GitHub's `ETag`, treats `304 Not Modified` as no replacement, and retains the last known good snapshot on any upstream error. No visitor route can trigger this call, and no `WebClient`, vendor SDK, or direct HTTP client is permitted.
+
+Rate-limit parsing, retry policy, quota persistence, and rate-limit-aware scheduling are deliberately deferred. They belong in a separate shared-library rate-limit module; this HTTP client and Showoff contain no app-side substitute.
+
+#### GitHub local delivery status — 2026-08-23
+
+- [x] Private Tailnet-only GitHub PAT setup surface, encrypted library-backed storage, and no-read credential boundary.
+- [x] Local HTTP snapshot integration with disabled-by-default redacted diagnostics, bounded responses, ETag persistence, conditional requests, `304` no-write handling, and last-known-good public-event snapshots.
+- [x] Local Compose deployment verified with the API and web gateway healthy; GitHub refresh remains disabled until operator credentials and explicit profile approval are configured.
+- [ ] GraphQL contribution calendar/total and Easy Fintrack enrichment after their public projections are reviewed.
+- [ ] Rate-limit parsing, quota persistence, retry policy, and rate-limit-aware scheduling in the dedicated shared-library rate-limit module.
+- [ ] Replace local snapshot dependencies with released BOM-governed artifacts before promotion.
 
 ### Phase 3 — selected media integrations
 

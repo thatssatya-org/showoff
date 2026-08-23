@@ -43,7 +43,9 @@ public final class ListmonkNewsletterSubscriptionService implements NewsletterSu
             }
         } catch (NewsletterServiceUnavailableException exception) {
             throw exception;
-        } catch (LibraryException | RuntimeException exception) {
+        } catch (LibraryException exception) {
+            throw new NewsletterServiceUnavailableException();
+        } catch (RuntimeException exception) {
             throw new NewsletterServiceUnavailableException();
         }
     }

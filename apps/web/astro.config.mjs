@@ -17,7 +17,7 @@ const localApiProxy = localApiOrigin
 
 export default defineConfig({
   site: configuredSite || "https://thatssatya.github.io",
-  integrations: [react(), sitemap()],
+  integrations: [react(), sitemap({ filter: (page) => !new URL(page).pathname.startsWith("/operator/") })],
   vite: {
     plugins: [tailwindcss()],
     server: { proxy: localApiProxy },
