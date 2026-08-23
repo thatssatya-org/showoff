@@ -1,21 +1,18 @@
 ---
-import NewsletterForm from "../components/NewsletterForm";
 import SignalMast from "../components/SignalMast.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { newsletterConsent } from "../data/site";
 ---
 
-<BaseLayout title="Newsletter — Satyajit Roy" description="A low-noise, double-opt-in newsletter without tracker pixels.">
+<BaseLayout title="Newsletter — Satyajit Roy" description="The newsletter is not accepting subscriptions yet.">
   <div class="frame field-layout">
     <SignalMast enabledSources={["curated"]} />
     <section class="content-field newsletter-page" aria-labelledby="newsletter-title">
       <p class="eyebrow">Low-noise dispatch</p>
-      <h1 id="newsletter-title">Occasional notes. No surveillance residue.</h1>
-      <p class="intro">The newsletter runs through a self-hosted list manager. Confirm your address through double opt-in before anything is sent. Nothing on this page uses tracking pixels.</p>
-      <NewsletterForm client:load consentVersion={newsletterConsent.version} consentText={newsletterConsent.text} />
+      <h1 id="newsletter-title">Dispatch is offline.</h1>
+      <p class="intro">Subscriptions are not open while the sender domain and delivery boundary are being configured. This site does not collect email addresses.</p>
       <div class="newsletter-page__details section-rule">
         <h2>What is retained</h2>
-        <p>Subscription consent evidence and the address needed to deliver and manage the list. The public site does not expose list administration, delivery systems, or subscriber data.</p>
+        <p>No newsletter data is collected or retained. When subscriptions open, they will use a self-hosted double-opt-in flow with no tracking pixels.</p>
         <a href="/privacy">Read the privacy policy</a>
       </div>
     </section>

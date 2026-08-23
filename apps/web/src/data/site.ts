@@ -31,6 +31,7 @@ export const siteIdentity = {
   contactLabel: "DM on Instagram",
   contactHref: "https://www.instagram.com/thatssatya",
   githubProfile: "https://github.com/thatssatya",
+  newsletterEnabled: false,
   socialLinks: [
     { label: "Spotify", href: "https://open.spotify.com/user/ubhku2hccfwxobdfjzbh7dk20" },
     { label: "X", href: "https://x.com/thatssatya" },
@@ -113,9 +114,9 @@ export const publicFocus = [
 ] as const;
 
 export const homelabStory = {
-  title: "Systems, without the attack surface",
+  title: "The quiet machine room",
   body:
-    "A private lab for learning, automation, media, and careful infrastructure work. This page documents principles and categories—not topology, live health, or operational access.",
+    "A self-hosted proving ground where automation, media, AI, and file systems are built to recover cleanly when the network gets interesting. The machinery stays private; the engineering discipline is the part worth publishing.",
   categories: ["media", "AI gateway", "photo management", "file tooling", "automation", "monitoring", "remote access"] as const,
   principles: [
     "Private overlay access before public exposure.",

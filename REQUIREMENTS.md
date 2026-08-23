@@ -155,8 +155,9 @@ Nothing is published merely because a vendor account or repository is discoverab
 
 - Show manually curated project cards with title, problem, outcome, stack, repository/demo links, screenshots, and status.
 - Enrich selected cards with GitHub stars, language, latest public commit date, and release information from cached GitHub data.
-- Show the last 5–10 public events, grouped so a multi-commit push does not create visual noise.
-- Show a year contribution heat map and total public contribution count. Never include private work in a public count unless the owner deliberately opts into an aggregate-only disclosure.
+- Show the last 8 public events, grouped so a multi-commit push does not create visual noise. Render the feed as a timeline with an accessible newest-first/oldest-first sort control; sorting operates over the cached public snapshot and does not refetch GitHub.
+- Show a year contribution heat map and total public contribution count. The owner has opted into GitHub-style anonymous private-contribution disclosure: private contributions may be merged into the calendar and total only, labelled as containing private contributions. Never publish a private repository name, organisation, URL, event type, commit/revision, issue/PR, language, title, body, or time more precise than the calendar day. The public event timeline remains public-only.
+- Enrich only Easy Fintrack from public GitHub data. File Nexus remains an owner-authored card; its private-repository metadata and activity are not a public API source.
 - Cache GitHub data, respect rate limits/ETags, and continue serving the last known good snapshot on an outage.
 
 ### FR-3: Spotify music card
@@ -196,7 +197,7 @@ Nothing is published merely because a vendor account or repository is discoverab
 
 - Present a public-safe “systems I run” story: compute classes (Raspberry Pis and an older Windows laptop), network isolation, backup/maintenance principles, and service categories such as media, AI gateway, photo management, file tooling, automation, monitoring, and remote access.
 - Provide a deliberately coarse snapshot: e.g. number of nodes/services online, last backup age band, and availability band. Round values and delay publication. The owner chooses every field.
-- The collector runs inside the Tailnet and posts a signed, allow-listed aggregate document to the API through an authenticated private route. It must not grant public reachability into the Tailnet.
+- Phase 4 metrics are produced by a backend-local cron-scheduled collector running on the Tailnet-connected host. It builds one schema-validated, allow-listed aggregate JSON snapshot, persists it as the delayed public cache, and exposes it only through the cacheable public summary API. A visitor request never triggers collection or reaches into the Tailnet. If collection is later separated from the backend process, it must use a signed, replay-protected private route and must not grant public reachability into the Tailnet.
 - Do not disclose live resource use, service/container names by default, URLs, addresses, ports, versions, vendor tokens, screenshots containing sensitive data, or raw Prometheus/Docker output.
 - Include a static architecture diagram after the owner approves which components are safe to name.
 
@@ -289,7 +290,7 @@ The provider-specific legacy/readability endpoints above are convenience aliases
 2. **OAuth:** use state, PKCE where supported, exact redirect URIs, short-lived signed state cookies, least-privilege scopes, encrypted refresh tokens, revocation, and an internal disconnect action. Do not treat a social account handle as proof of ownership.
 3. **Edge:** TLS 1.3, HSTS after domain validation, CSP with no arbitrary third-party scripts, `frame-ancestors 'none'`, `nosniff`, referrer policy, and proxy-level body/request rate limits. Allow only `/api` and static site traffic; management is Tailnet-only.
 4. **Input handling:** Bean Validation with size caps and email normalisation; allow-list outbound vendor hosts; reject unexpected JSON fields; encode all text; use prepared queries; no user-controlled URL fetches.
-5. **Data minimisation:** collect only newsletter email + consent evidence. Do not install behavioural analytics. Use privacy-friendly aggregate server logs with a short documented retention window.
+5. **Data minimisation:** collect only newsletter email + consent evidence when the newsletter is enabled. The GitHub publication projection may retain only the approved public activity snapshot and an anonymous private-contribution calendar/total; it must not persist or emit private repository/event metadata. Do not install behavioural analytics. Use privacy-friendly aggregate server logs with a short documented retention window.
 6. **Homelab isolation:** no Docker socket, NPM admin, Listmonk admin, database, Actuator, or private service route may be published through the portfolio vhost. The aggregate collector is outbound/private, signed, replay-protected, and field-allow-listed.
 7. **Availability:** each connector has a hard timeout, bounded retries with jitter, circuit breaking, and stale-while-revalidate output. A vendor outage becomes a “last updated” card—not a slow or broken homepage.
 8. **Backups:** encrypted MongoDB backups, off-device copy, restore test cadence, and an owner runbook. Backups must include the isolated Listmonk PostgreSQL database and application configuration but can exclude recoverable external cache snapshots when recovery does not need them.
@@ -324,7 +325,12 @@ Every collection has an explicit ID prefix, a schema version, retention policy, 
 - [x] Public masthead, Bengaluru location disclosure, Instagram-DM contact route, no-behavioural-analytics default, social rail, support link, newsletter sender/consent copy, and the privacy disclosure are owner-approved and implemented in typed static content.
 - [x] Owner-approved curated entries are implemented: `Shaukeens`, `Chat with AI!`, Spotify `On Repeat`, and the `Aero India '23` Google Photos album. Spotify is an official embed with a direct fallback link; Aero India uses a labelled carousel and direct album link.
 - [x] Remaining legacy destinations resolved: retain X at `https://x.com/thatssatya`; retain YouTube at `https://www.youtube.com/@TheMotoDirector`; retire the legacy email contact link. Do not render an email placeholder.
-- [ ] Approve featured project content, homelab-safe fields, public mail domain, and vendor applications/credentials only for integrations that will actually be enabled.
+- [x] Homelab v1 disclosure is approved: publish only the approved title, narrative, service categories, and operating principles. Publish no metrics, diagram, identifiers, topology, live state, or operational detail in v1.
+- [x] Featured project content is approved: publish File Nexus as the data-ingestion and transformation platform, and Easy Fintrack as its statement-to-ledger dashboard companion. File Nexus uses the owner-approved repository URL; its availability must be checked before presenting it as a public source record.
+- [x] Initial dynamic-integration scope is GitHub only. Spotify, Instagram, LinkedIn, and YouTube remain curated/manual links until separately approved.
+- [x] GitHub presentation scope is approved: profile `thatssatya`; eight-event public-only timeline with newest/oldest sorting; public Easy Fintrack enrichment; and a GitHub-style anonymous private-contribution heat map/total. File Nexus stays owner-authored despite its approved repository link.
+- [x] Newsletter is deferred. Hide subscription controls and collect no email addresses until the owner approves a public sender domain and self-hosted delivery configuration.
+- [ ] Approve a public mail domain and sender identity before enabling the newsletter.
 
 ### Phase 1 — static portfolio foundation
 
@@ -334,9 +340,9 @@ Every collection has an explicit ID prefix, a schema version, retention policy, 
 
 ### Phase 2 — first-party data and GitHub
 
-1. Build the generic provider-profile/capability registry, capability-manifest API, and GitHub Strategy adapter with Mongo snapshots, indexes, projections, ETags, rate-limit handling, and owner-curation overrides.
-2. Add Listmonk double opt-in integration, email-safe logs, unsubscribe flow, rate limits, and consent tests.
-3. Launch with only the static/site-content, GitHub, and newsletter surface if all checks pass.
+1. Build the generic provider-profile/capability registry, capability-manifest API, and GitHub Strategy adapter with Mongo snapshots, indexes, projections, ETags, rate-limit handling, and owner-curation overrides. Its publication projection exposes eight public events and Easy Fintrack enrichment only; the private-contribution projection is calendar/total-only with no private repository/event metadata.
+2. Build GitHub as the only initial dynamic capability. Defer Listmonk, its sender configuration, and all newsletter data collection until a public mail domain is approved.
+3. Launch with static/site-content and GitHub only if all checks pass.
 
 ### Phase 3 — selected media integrations
 
@@ -346,8 +352,8 @@ Every collection has an explicit ID prefix, a schema version, retention policy, 
 
 ### Phase 4 — homelab story and operations
 
-1. Define and approve the aggregate homelab schema and diagram.
-2. Implement Tailnet collector signing/replay protection and delayed public snapshot.
+1. Define and approve the aggregate homelab schema and diagram. The initial public schema is intentionally empty; metrics are deferred from v1.
+2. Implement the backend-local cron-scheduled collector on the Tailnet-connected host. It must construct one validated, allow-listed unified JSON snapshot, persist a delayed cache, and expose it through `/api/v1/homelab/summary`; no visitor request may run the collector. If extraction moves to a separate process, add signed replay-protected private ingestion.
 3. Add a Tailnet-only operations interface/CLI, provider token-expiry alerts, Temporal-backed durable workflows for external/Mongo coordination, restore drill, and incident runbooks.
 
 ## 11. Definition of done / acceptance criteria

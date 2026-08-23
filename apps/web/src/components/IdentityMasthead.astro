@@ -10,16 +10,17 @@ interface Props {
   contactLabel: string;
   contactHref: string;
   socialLinks: readonly SocialLink[];
+  newsletterEnabled: boolean;
 }
 
-const { name, identityLine, themes, thesis, location, contactLabel, contactHref, socialLinks } = Astro.props;
+const { name, identityLine, themes, thesis, location, contactLabel, contactHref, socialLinks, newsletterEnabled } = Astro.props;
 ---
 
 <header class="identity-masthead">
   <p class="eyebrow">Independent field record</p>
   <div class="identity-masthead__topline">
     <h1>{name}</h1>
-    <a class="subscribe-link" href="/newsletter">Subscribe</a>
+    {newsletterEnabled && <a class="subscribe-link" href="/newsletter">Subscribe</a>}
   </div>
   <p class="identity-line">{identityLine}</p>
   <p class="themes">{themes.join("  |  ")}</p>

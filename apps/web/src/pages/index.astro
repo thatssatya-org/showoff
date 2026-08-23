@@ -5,12 +5,11 @@ import CapabilitySection from "../components/CapabilitySection";
 import HomelabPreview from "../components/HomelabPreview.astro";
 import IdentityMasthead from "../components/IdentityMasthead.astro";
 import MustListenCard from "../components/MustListenCard.astro";
-import NewsletterForm from "../components/NewsletterForm";
 import ProjectGrid from "../components/ProjectGrid.astro";
 import RightNowCollection from "../components/RightNowCollection.astro";
 import SignalMast from "../components/SignalMast.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { homelabStory, mustListen, newsletterConsent, publicFocus, rightNowItems, siteIdentity } from "../data/site";
+import { homelabStory, mustListen, publicFocus, rightNowItems, siteIdentity } from "../data/site";
 
 const projects = (await getCollection("projects", ({ data }) => data.visible))
   .sort((left, right) => left.data.order - right.data.order)
@@ -56,14 +55,13 @@ const enableLiveCapabilities = import.meta.env.PUBLIC_ENABLE_LIVE_CAPABILITIES =
         <HomelabPreview {...homelabStory} />
       </div>
 
-      <section class="newsletter-block section-rule" aria-labelledby="newsletter-title">
+      {siteIdentity.newsletterEnabled && <section class="newsletter-block section-rule" aria-labelledby="newsletter-title">
         <div>
           <p class="section-label">Low-noise dispatch</p>
           <h2 id="newsletter-title">Occasional notes. No tracking pixels.</h2>
           <p>Subscriptions use confirmation email and stay inside the self-hosted newsletter boundary.</p>
         </div>
-        <NewsletterForm client:load consentVersion={newsletterConsent.version} consentText={newsletterConsent.text} />
-      </section>
+      </section>}
     </div>
   </div>
 </BaseLayout>
