@@ -11,7 +11,7 @@ class PublicCapabilitySnapshotTest {
 
     @Test
     void copiesContentIntoAnImmutableMap() {
-        var source = new HashMap<String, Object>();
+        var source = new HashMap<String, String>();
         source.put("title", "Cached activity");
 
         var snapshot = PublicCapabilitySnapshot.builder()

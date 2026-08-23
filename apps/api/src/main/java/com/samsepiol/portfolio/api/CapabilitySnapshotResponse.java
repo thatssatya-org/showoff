@@ -31,7 +31,7 @@ public class CapabilitySnapshotResponse {
     @NonNull
     Instant refreshedAt;
     @NonNull
-    Map<String, Object> content;
+    Map<String, String> content;
 
     @Builder
     public CapabilitySnapshotResponse(
@@ -41,7 +41,7 @@ public class CapabilitySnapshotResponse {
             @NonNull String title,
             @NonNull String sourceLabel,
             @NonNull Instant refreshedAt,
-            @NonNull Map<String, Object> content) {
+            @NonNull Map<String, String> content) {
         this.capability = capability;
         this.componentType = componentType;
         this.state = state;

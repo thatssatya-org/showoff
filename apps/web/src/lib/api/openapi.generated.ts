@@ -123,7 +123,7 @@ export interface components {
             /** Format: date-time */
             refreshedAt?: string;
             content?: {
-                [key: string]: Record<string, never>;
+                [key: string]: string;
             };
         };
     };

@@ -76,7 +76,7 @@ class MongoCapabilitySnapshotReadRepositoryTest {
 
     @Test
     void defensivelyCopiesSnapshotContent() {
-        var content = new HashMap<String, Object>();
+        var content = new HashMap<String, String>();
         content.put("events", "5");
         var snapshot = ExternalSnapshotEntity.builder()
                 .capability(CapabilityType.GITHUB_ACTIVITY)
