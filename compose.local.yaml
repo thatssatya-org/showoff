@@ -78,7 +78,7 @@ services:
       context: ./apps/api
       dockerfile: Dockerfile
     image: showoff-api:local
-    restart: "no"
+    restart: unless-stopped
     mem_limit: 512m
     cpus: 0.75
     pids_limit: 256
@@ -96,7 +96,7 @@ services:
       PORTFOLIO_GITHUB_REFRESH_ENABLED: ${PORTFOLIO_GITHUB_REFRESH_ENABLED:-false}
       PORTFOLIO_GITHUB_REFRESH_PUBLIC_APPROVED: ${PORTFOLIO_GITHUB_REFRESH_PUBLIC_APPROVED:-false}
       PORTFOLIO_GITHUB_REFRESH_PROFILE_ID: ${PORTFOLIO_GITHUB_REFRESH_PROFILE_ID:-github-primary}
-      PORTFOLIO_GITHUB_REFRESH_HANDLE: ${PORTFOLIO_GITHUB_REFRESH_HANDLE:-replace-me}
+      PORTFOLIO_GITHUB_REFRESH_HANDLE: ${PORTFOLIO_GITHUB_REFRESH_HANDLE:-thatssatya}
       PORTFOLIO_GITHUB_REFRESH_CRON: ${PORTFOLIO_GITHUB_REFRESH_CRON:-0 */15 * * * *}
       SERVER_PORT: "8080"
     networks:
@@ -115,8 +115,9 @@ services:
       args:
         PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-http://127.0.0.1:4321}
         PUBLIC_ENABLE_LIVE_CAPABILITIES: ${PUBLIC_ENABLE_LIVE_CAPABILITIES:-true}
+        PUBLIC_ENABLE_OPERATOR_GITHUB_SETUP: ${PUBLIC_ENABLE_OPERATOR_GITHUB_SETUP:-true}
     image: showoff-web:local
-    restart: "no"
+    restart: unless-stopped
     mem_limit: 192m
     cpus: 0.50
     pids_limit: 128
