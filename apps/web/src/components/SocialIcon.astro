@@ -1,0 +1,28 @@
+---
+import { siBuymeacoffee, siGithub, siInstagram, siSpotify, siX, siYoutube } from "simple-icons";
+
+interface Props {
+  label: string;
+}
+
+const { label } = Astro.props;
+const linkedInPath = "M5.34 3.5a1.84 1.84 0 1 1 0 3.68 1.84 1.84 0 0 1 0-3.68ZM3.75 8.55h3.18V20.5H3.75V8.55Zm5.18 0H12v1.63h.04c.43-.81 1.5-1.97 3.23-1.97 3.45 0 4.08 2.27 4.08 5.23v7.06h-3.18v-6.26c0-1.5-.03-3.42-2.08-3.42-2.09 0-2.41 1.63-2.41 3.31v6.37H8.5V8.55h.43Z";
+const paths: Record<string, string> = {
+  Spotify: siSpotify.path,
+  X: siX.path,
+  Instagram: siInstagram.path,
+  LinkedIn: linkedInPath,
+  GitHub: siGithub.path,
+  "Buy me a coffee": siBuymeacoffee.path,
+  YouTube: siYoutube.path
+};
+---
+
+<svg class="social-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d={paths[label]} fill="currentColor" /></svg>
+
+<style>
+  .social-icon {
+    display: block;
+    flex: none;
+  }
+</style>
