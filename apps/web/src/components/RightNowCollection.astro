@@ -87,7 +87,18 @@ const { items } = Astro.props;
   .right-now__slide img { display: block; width: 100%; height: 100%; object-fit: cover; }
   .right-now__carousel-hint { margin-top: 0.15rem !important; color: var(--muted); font-family: var(--font-mono); font-size: 0.68rem !important; }
   .right-now__carousel-hint a { color: var(--ink); }
-  @media (min-width: 720px) { .right-now__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .right-now__item--spotify-player { grid-column: span 2; } }
+  @media (min-width: 720px) {
+    /* Both feature blocks start at the parent grid edge. */
+    .right-now { padding: 0; }
+
+    .right-now__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .right-now__item--spotify-player { grid-column: span 2; }
+
+    /* Keep the photo record out of the narrow orphan column. It is a sequence,
+       so it owns the complete row and lets the carousel read as a field strip. */
+    .right-now__item--photo-carousel { grid-column: 1 / -1; }
+    .right-now__item--photo-carousel .right-now__slide { flex-basis: min(72%, 34rem); }
+  }
 </style>
 
 <script>
