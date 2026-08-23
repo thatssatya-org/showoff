@@ -19,7 +19,7 @@ public class GitHubActivityRefreshScheduler {
         try {
             strategy.refresh(CapabilitySnapshotRefreshRequest.builder().capability(CapabilityType.GITHUB_ACTIVITY).build());
         } catch (RuntimeException exception) {
-            log.warn("GitHub activity refresh could not start; no visitor request is affected");
+            log.warn("GitHub activity refresh could not start; no visitor request is affected", exception);
         }
     }
 }

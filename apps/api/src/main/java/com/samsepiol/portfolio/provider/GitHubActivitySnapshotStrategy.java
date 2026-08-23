@@ -71,7 +71,7 @@ public final class GitHubActivitySnapshotStrategy implements CapabilitySnapshotS
             snapshotRepository.replace(replacement);
             return GitHubActivitySnapshotMapper.INSTANCE.toPublicSnapshot(replacement);
         } catch (RuntimeException exception) {
-            log.warn("GitHub activity refresh failed; retaining the last known good snapshot");
+            log.warn("GitHub activity refresh failed; retaining the last known good snapshot", exception);
         }
         return existing == null ? emptySnapshot() : GitHubActivitySnapshotMapper.INSTANCE.toPublicSnapshot(existing);
     }

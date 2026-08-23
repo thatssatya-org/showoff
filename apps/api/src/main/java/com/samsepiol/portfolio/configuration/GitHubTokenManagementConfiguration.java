@@ -17,6 +17,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Arrays;
@@ -65,6 +66,7 @@ public class GitHubTokenManagementConfiguration {
     }
 
     @Bean
+    @Primary
     TokenManagementService gitHubTokenManagementService(
             CredentialEnvelopeCipher gitHubTokenEnvelopeCipher,
             TokenRepository gitHubTokenRepository,

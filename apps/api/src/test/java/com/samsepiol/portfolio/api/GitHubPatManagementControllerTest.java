@@ -6,6 +6,8 @@ import com.samsepiol.library.token.management.TokenManagementService;
 import com.samsepiol.library.token.management.TokenReference;
 import com.samsepiol.library.token.management.TokenStorageContext;
 import com.samsepiol.portfolio.configuration.GitHubTokenProperties;
+import com.samsepiol.portfolio.provider.CapabilitySnapshotRefreshRequest;
+import com.samsepiol.portfolio.provider.GitHubActivitySnapshotStrategy;
 import com.samsepiol.portfolio.security.TailnetManagementAccess;
 import com.samsepiol.portfolio.security.GitHubPatManagementRequestFilter;
 import org.junit.jupiter.api.Test;
@@ -16,6 +18,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -33,9 +36,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(controllers = GitHubPatManagementController.class)
+@WebMvcTest(controllers = {GitHubPatManagementController.class, GitHubActivityRefreshSupportController.class})
 @Import({ApiExceptionHandler.class, GitHubPatManagementControllerTest.TestConfig.class})
-@TestPropertySource(properties = "portfolio.github-token.enabled=true")
+@TestPropertySource(properties = {"portfolio.github-token.enabled=true", "portfolio.github-refresh.enabled=true"})
 class GitHubPatManagementControllerTest {
     private static final String TOKEN = "github_pat_test_value_not_a_credential";
 
@@ -45,9 +48,13 @@ class GitHubPatManagementControllerTest {
     @Autowired
     private TokenManagementService tokenManagementService;
 
+    @Autowired
+    private GitHubActivitySnapshotStrategy gitHubActivitySnapshotStrategy;
+
     @BeforeEach
     void resetService() {
         reset(tokenManagementService);
+        reset(gitHubActivitySnapshotStrategy);
     }
 
     @Test
@@ -108,9 +115,33 @@ class GitHubPatManagementControllerTest {
         verify(tokenManagementService, never()).create(any(), any(), any());
     }
 
+    @Test
+    void refreshesGitHubActivityOnlyForTailnetSupportCallers() throws Exception {
+        mockMvc.perform(managementPost("/internal/v1/provider-profiles/github/activity/refresh", "100.64.12.34", ""))
+                .andExpect(status().isNoContent())
+                .andExpect(header().string("Cache-Control", "no-store"));
+
+        var request = ArgumentCaptor.forClass(CapabilitySnapshotRefreshRequest.class);
+        verify(gitHubActivitySnapshotStrategy).refresh(request.capture());
+        assertThat(request.getValue().getCapability()).isEqualTo(com.samsepiol.portfolio.domain.CapabilityType.GITHUB_ACTIVITY);
+    }
+
+    @Test
+    void deniesNonTailnetSupportRefreshCallers() throws Exception {
+        mockMvc.perform(managementPost("/internal/v1/provider-profiles/github/activity/refresh", "203.0.113.44", ""))
+                .andExpect(status().isForbidden());
+
+        verify(gitHubActivitySnapshotStrategy, never()).refresh(any());
+    }
+
     private static org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder managementPost(
             String remoteAddress, String content) {
-        return post("/internal/v1/provider-profiles/github/pat")
+        return managementPost("/internal/v1/provider-profiles/github/pat", remoteAddress, content);
+    }
+
+    private static org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder managementPost(
+            String path, String remoteAddress, String content) {
+        return post(path)
                 .contentType("application/json")
                 .content(content)
                 .with(request -> {
@@ -128,6 +159,7 @@ class GitHubPatManagementControllerTest {
         }
 
         @Bean
+        @Primary
         GitHubTokenProperties gitHubTokenProperties() {
             return new GitHubTokenProperties("github-token-v1", "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
                     List.of("172.30.0.0/24"), List.of("100.64.0.0/10"));
@@ -141,6 +173,11 @@ class GitHubPatManagementControllerTest {
         @Bean
         GitHubPatManagementRequestFilter gitHubPatManagementRequestFilter(TailnetManagementAccess access) {
             return new GitHubPatManagementRequestFilter(access);
+        }
+
+        @Bean
+        GitHubActivitySnapshotStrategy gitHubActivitySnapshotStrategy() {
+            return org.mockito.Mockito.mock(GitHubActivitySnapshotStrategy.class);
         }
     }
 }
