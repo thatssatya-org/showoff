@@ -14,28 +14,26 @@ import java.util.List;
 @Component
 @ConditionalOnProperty(prefix = "portfolio.github-refresh", name = "enabled", havingValue = "true")
 @RequiredArgsConstructor
-public final class GitHubActivityClient {
-    private static final String SERVICE = "github";
-    private static final String PUBLIC_EVENTS = "public-events";
+public final class DefaultGithubServiceClient implements GithubServiceClient {
     private final HttpClient httpClient;
 
     public GitHubActivityFetchResponse fetchPublicEvents(char[] token, String etag) {
         var headers = new HashMap<String, String>();
         headers.put(HttpConstants.Headers.AUTHORIZATION, "Bearer " + new String(token));
-        headers.put("Accept", "application/vnd.github+json");
-        headers.put("X-GitHub-Api-Version", "2022-11-28");
-        headers.put("User-Agent", "showoff-github-refresh");
+        headers.put("Accept", GithubServiceClient.Constants.ACCEPT);
+        headers.put(GithubServiceClient.Constants.API_VERSION_HEADER, GithubServiceClient.Constants.API_VERSION);
+        headers.put(GithubServiceClient.Constants.USER_AGENT, GithubServiceClient.Constants.USER_AGENT_VALUE);
         if (etag != null && !etag.isBlank()) {
-            headers.put("If-None-Match", etag);
+            headers.put(GithubServiceClient.Constants.IF_NONE_MATCH, etag);
         }
         var response = httpClient.executeWithResponse(ApiRequest.builder()
-                .service(SERVICE)
-                .api(PUBLIC_EVENTS)
+                .service(GithubServiceClient.Constants.SERVICE)
+                .api(GithubServiceClient.Constants.PUBLIC_EVENTS)
                 .headers(headers)
                 .build(), GitHubPublicEventResponse[].class);
         return GitHubActivityFetchResponse.builder()
                 .statusCode(response.getStatusCode())
-                .etag(response.firstHeader("etag").orElse(null))
+                .etag(response.firstHeader(GithubServiceClient.Constants.ETAG).orElse(null))
                 .events(response.getBody() == null ? List.of() : Arrays.asList(response.getBody()))
                 .build();
     }

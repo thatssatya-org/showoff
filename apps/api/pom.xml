@@ -20,7 +20,6 @@
     <properties>
         <project.mainClass>com.samsepiol.portfolio.PortfolioApiApplication</project.mainClass>
         <samsepiol.library.version>0.0.4-LIBRARY-SNAPSHOT</samsepiol.library.version>
-        <mapstruct.version>1.6.3</mapstruct.version>
     </properties>
 
     <dependencies>
@@ -74,13 +73,6 @@
         <dependency>
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct</artifactId>
-            <version>${mapstruct.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mapstruct</groupId>
-            <artifactId>mapstruct-processor</artifactId>
-            <version>${mapstruct.version}</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

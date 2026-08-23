@@ -10,13 +10,15 @@ import com.samsepiol.portfolio.repository.entity.ExternalSnapshotEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
+import org.mapstruct.factory.Mappers;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
-@Mapper(componentModel = "spring")
+@Mapper
 public interface GitHubActivitySnapshotMapper {
+    GitHubActivitySnapshotMapper INSTANCE = Mappers.getMapper(GitHubActivitySnapshotMapper.class);
     @Mapping(target = "day", source = "createdAt", qualifiedByName = "toDefaultZoneDate")
     @Mapping(target = "repository", source = "repo.name")
     GitHubPublicEvent toPublicEvent(GitHubPublicEventResponse event);
@@ -50,7 +52,7 @@ public interface GitHubActivitySnapshotMapper {
                 .filter(event -> event.getRepo() != null && event.getRepo().getName() != null
                         && !event.getRepo().getName().isBlank())
                 .limit(8)
-                .map(this::toPublicEvent)
+                .map(GitHubActivitySnapshotMapper.INSTANCE::toPublicEvent)
                 .toList();
         return Map.of("events", SerializationUtil.convertToString(publicEvents));
     }

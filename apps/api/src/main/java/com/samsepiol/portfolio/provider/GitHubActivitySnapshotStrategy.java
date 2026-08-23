@@ -11,7 +11,7 @@ import com.samsepiol.portfolio.configuration.GitHubTokenProperties;
 import com.samsepiol.portfolio.domain.CapabilityState;
 import com.samsepiol.portfolio.domain.CapabilityType;
 import com.samsepiol.portfolio.domain.PublicCapabilitySnapshot;
-import com.samsepiol.portfolio.provider.github.GitHubActivityClient;
+import com.samsepiol.portfolio.provider.github.GithubServiceClient;
 import com.samsepiol.portfolio.repository.GitHubActivitySnapshotRepository;
 import com.samsepiol.portfolio.repository.entity.ExternalSnapshotEntity;
 import lombok.NonNull;
@@ -33,12 +33,11 @@ public final class GitHubActivitySnapshotStrategy implements CapabilitySnapshotS
             .principalId("github-refresh-scheduler")
             .operation(GitHubTokenManagementConfiguration.GITHUB_TOKEN_USE_OPERATION)
             .build();
-    private final GitHubActivityClient gitHubActivityClient;
+    private final GithubServiceClient githubServiceClient;
     private final TokenManagementService tokenManagementService;
     private final GitHubActivitySnapshotRepository snapshotRepository;
     private final GitHubRefreshProperties refreshProperties;
     private final GitHubTokenProperties tokenProperties;
-    private final GitHubActivitySnapshotMapper snapshotMapper;
 
     @Override
     public @NonNull CapabilityType capabilityType() {
@@ -50,30 +49,31 @@ public final class GitHubActivitySnapshotStrategy implements CapabilitySnapshotS
         if (request.getCapability() != CapabilityType.GITHUB_ACTIVITY) {
             throw new IllegalArgumentException("GitHub activity strategy accepts only GITHUB_ACTIVITY");
         }
-        var existing = snapshotRepository.find(refreshProperties.profileId());
+        var existing = snapshotRepository.find(refreshProperties.getProfileId());
         var snapshot = tokenManagementService.useForInternalIntegration(storageContext(), INTERNAL_AUTHORIZATION,
                 token -> refreshWithToken(token, existing));
         return CapabilitySnapshotRefreshResponse.builder().snapshot(snapshot).build();
     }
 
-    private PublicCapabilitySnapshot refreshWithToken(char[] token, java.util.Optional<ExternalSnapshotEntity> existing) {
+    private PublicCapabilitySnapshot refreshWithToken(char[] token, ExternalSnapshotEntity existing) {
         try {
-            var response = gitHubActivityClient.fetchPublicEvents(token,
-                    existing.map(ExternalSnapshotEntity::getProviderEtag).orElse(null));
+            var response = githubServiceClient.fetchPublicEvents(token,
+                    existing == null ? null : existing.getProviderEtag());
             if (response.isNotModified()) {
-                return existing.map(snapshotMapper::toPublicSnapshot).orElseGet(this::emptySnapshot);
+                return existing == null ? emptySnapshot() : GitHubActivitySnapshotMapper.INSTANCE.toPublicSnapshot(existing);
             }
             if (!response.isSuccessful()) {
                 throw new IllegalStateException("GitHub returned an unsuccessful response");
             }
             var refreshedAt = Instant.ofEpochMilli(DateTimeUtils.currentEpochMillis());
-            var replacement = snapshotMapper.toEntity(response, refreshProperties, refreshedAt, refreshedAt.plusSeconds(900));
+            var replacement = GitHubActivitySnapshotMapper.INSTANCE.toEntity(response, refreshProperties, refreshedAt,
+                    refreshedAt.plusSeconds(900));
             snapshotRepository.replace(replacement);
-            return snapshotMapper.toPublicSnapshot(replacement);
+            return GitHubActivitySnapshotMapper.INSTANCE.toPublicSnapshot(replacement);
         } catch (RuntimeException exception) {
             log.warn("GitHub activity refresh failed; retaining the last known good snapshot");
         }
-        return existing.map(snapshotMapper::toPublicSnapshot).orElseGet(this::emptySnapshot);
+        return existing == null ? emptySnapshot() : GitHubActivitySnapshotMapper.INSTANCE.toPublicSnapshot(existing);
     }
 
     private TokenStorageContext storageContext() {

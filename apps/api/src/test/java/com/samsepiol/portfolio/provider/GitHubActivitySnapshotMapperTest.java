@@ -5,7 +5,6 @@ import com.samsepiol.portfolio.provider.github.GitHubActivityFetchResponse;
 import com.samsepiol.portfolio.provider.github.GitHubPublicEventResponse;
 import com.samsepiol.portfolio.provider.github.GitHubRepositoryResponse;
 import org.junit.jupiter.api.Test;
-import org.mapstruct.factory.Mappers;
 
 import java.time.Instant;
 import java.util.List;
@@ -13,7 +12,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class GitHubActivitySnapshotMapperTest {
-    private final GitHubActivitySnapshotMapper mapper = Mappers.getMapper(GitHubActivitySnapshotMapper.class);
+    private final GitHubActivitySnapshotMapper mapper = GitHubActivitySnapshotMapper.INSTANCE;
 
     @Test
     void persistsOnlyTheApprovedPublicEventProjectionInTheDefaultZone() {
@@ -23,12 +22,22 @@ class GitHubActivitySnapshotMapperTest {
                         .repo(GitHubRepositoryResponse.builder().name("owner/public-repo").build())
                         .build()))
                 .build();
-        var properties = new GitHubRefreshProperties(true, true, "github-primary", "octocat", "0 */15 * * * *");
+        var properties = refreshProperties();
 
         var entity = mapper.toEntity(response, properties, Instant.EPOCH, Instant.EPOCH.plusSeconds(900));
 
         assertThat(entity.getProviderEtag()).isEqualTo("\"next\"");
         assertThat(entity.getContent().get("events"))
                 .contains("PushEvent", "2026-08-24", "owner/public-repo");
+    }
+
+    private static GitHubRefreshProperties refreshProperties() {
+        var properties = new GitHubRefreshProperties();
+        properties.setEnabled(true);
+        properties.setPublicApproved(true);
+        properties.setProfileId("github-primary");
+        properties.setHandle("octocat");
+        properties.setCron("0 */15 * * * *");
+        return properties;
     }
 }

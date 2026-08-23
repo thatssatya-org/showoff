@@ -9,8 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.bson.conversions.Bson;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
-import java.util.Optional;
-
 import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
 
@@ -23,11 +21,11 @@ public class GitHubActivitySnapshotRepository {
             "profileEnabled", "providerEtag"), Projections.excludeId());
     private final Repository repository;
 
-    public @NonNull Optional<ExternalSnapshotEntity> find(@NonNull String profileId) {
-        return Optional.ofNullable(repository.getCollection(MongoCapabilitySnapshotReadRepository.COLLECTION,
+    public ExternalSnapshotEntity find(@NonNull String profileId) {
+        return repository.getCollection(MongoCapabilitySnapshotReadRepository.COLLECTION,
                         ExternalSnapshotEntity.class)
                 .find(and(eq("capability", CapabilityType.GITHUB_ACTIVITY), eq("profileId", profileId)))
-                .projection(REFRESH_PROJECTION).limit(1).first());
+                .projection(REFRESH_PROJECTION).limit(1).first();
     }
 
     public void replace(@NonNull ExternalSnapshotEntity snapshot) {

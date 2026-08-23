@@ -1,6 +1,7 @@
 package com.samsepiol.portfolio.provider.github;
 
 import lombok.Builder;
+import lombok.NonNull;
 import lombok.Value;
 
 import java.util.List;
@@ -8,9 +9,9 @@ import java.util.List;
 @Value
 @Builder
 public class GitHubActivityFetchResponse {
-    Integer statusCode;
+    @NonNull Integer statusCode;
     String etag;
-    List<GitHubPublicEventResponse> events;
+    @NonNull List<GitHubPublicEventResponse> events;
 
     public boolean isNotModified() {
         return statusCode == 304;

@@ -15,7 +15,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class GitHubActivityClientTest {
+class DefaultGithubServiceClientTest {
     @Test
     void fetchesTypedEventsWithTheStoredEtag() {
         var httpClient = mock(HttpClient.class);
@@ -28,7 +28,7 @@ class GitHubActivityClientTest {
                         .body(new GitHubPublicEventResponse[]{event})
                         .build());
 
-        var response = new GitHubActivityClient(httpClient).fetchPublicEvents("token-not-to-log".toCharArray(), "\"prior\"");
+        var response = new DefaultGithubServiceClient(httpClient).fetchPublicEvents("token-not-to-log".toCharArray(), "\"prior\"");
 
         var request = ArgumentCaptor.forClass(com.samsepiol.library.http.request.ApiRequest.class);
         verify(httpClient).executeWithResponse(request.capture(), eq(GitHubPublicEventResponse[].class));
