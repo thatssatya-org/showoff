@@ -33,8 +33,8 @@ public class TailnetManagementAccess {
         if (clientAddress == null || !isTailnetAddress(clientAddress)) {
             throw new ManagementAccessDeniedException();
         }
-        return new ManagementAuthorizationRequest("tailnet:" + clientAddress,
-                GitHubTokenManagementConfiguration.GITHUB_TOKEN_WRITE_OPERATION, Map.of());
+        return ManagementAuthorizationRequest.builder().principalId("tailnet:" + clientAddress)
+                .operation(GitHubTokenManagementConfiguration.GITHUB_TOKEN_WRITE_OPERATION).attributes(Map.of()).build();
     }
 
     private boolean isTrustedProxyAddress(String remoteAddress) {
