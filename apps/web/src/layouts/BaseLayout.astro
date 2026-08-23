@@ -12,6 +12,7 @@ interface Props {
 
 const { title, description, noIndex = false } = Astro.props;
 const canonical = new URL(Astro.url.pathname, siteUrl).toString();
+const showGitHubOperatorSetup = import.meta.env.PUBLIC_ENABLE_OPERATOR_GITHUB_SETUP === "true";
 const jsonLd = {
   "@context": "https://schema.org",
   "@graph": [
@@ -65,6 +66,7 @@ const themeInitScript = `(() => {
           <a href="/now">Now</a>
           <a href="/homelab">Homelab</a>
           <a href="/uses">Uses</a>
+          {showGitHubOperatorSetup && <a href="/operator/github/">Connect GitHub</a>}
         </nav>
         <ThemeToggle />
       </div>

@@ -101,8 +101,10 @@ fine-grained GitHub PAT once from the Tailnet-only operator page:
 PORTFOLIO_GITHUB_REFRESH_ENABLED=true
 PORTFOLIO_GITHUB_REFRESH_PUBLIC_APPROVED=true
 PORTFOLIO_GITHUB_REFRESH_HANDLE=thatssatya
+PUBLIC_ENABLE_OPERATOR_GITHUB_SETUP=true
 ```
 
-Open `/operator/github/` from a Tailnet address and save the token. The API
-stores it encrypted and the refresh worker writes an approved cached snapshot
-on its next schedule; the frontend then renders the GitHub activity component.
+Rebuild the web container, then use the **Connect GitHub** control from a
+Tailnet address to save the token. The API stores it encrypted and the refresh
+worker writes an approved cached snapshot on its next schedule; the frontend
+then renders the GitHub activity component.
