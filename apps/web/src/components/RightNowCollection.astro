@@ -15,7 +15,7 @@ const { items } = Astro.props;
   </div>
   <div class="right-now__grid">
     {
-      items.map((item) => (
+      items.map((item, itemIndex) => (
         <article class:list={["right-now__item", "card", "card-reveal", item.presentation && `right-now__item--${item.presentation}`]} data-source={item.source}>
           <p class="section-label">{item.source}</p>
           <h3>{item.title}</h3>
@@ -30,10 +30,23 @@ const { items } = Astro.props;
                 allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
               ></iframe>
             ) : item.presentation === "photo-carousel" && item.photos ? (
-              <div class="right-now__carousel" aria-label={`Photo carousel: ${item.title}`}>
-                <div class="right-now__track" tabindex="0">
+              <div class="right-now__carousel" data-photo-timeline aria-label={`Photo timeline: ${item.title}`}>
+                <div class="right-now__timeline-bar">
+                  <p class="right-now__timeline-status" aria-live="polite">
+                    <span data-timeline-current>Photo 1</span> <span aria-hidden="true">/</span> {item.photos.length}
+                  </p>
+                  <div class="right-now__timeline-controls">
+                    <button type="button" class="right-now__timeline-button" data-timeline-previous aria-controls={`photo-timeline-${itemIndex}`} aria-label="Show previous photo" disabled>
+                      Prev
+                    </button>
+                    <button type="button" class="right-now__timeline-button" data-timeline-next aria-controls={`photo-timeline-${itemIndex}`} aria-label="Show next photo">
+                      Next
+                    </button>
+                  </div>
+                </div>
+                <div class="right-now__track" id={`photo-timeline-${itemIndex}`} tabindex="0" aria-label={`${item.title} photos`}>
                   {item.photos.map((photo, index) => (
-                    <a class="right-now__slide" href={item.href} rel="external" aria-label={`Open Aero India album, photo ${index + 1} of ${item.photos?.length}`}>
+                    <a class="right-now__slide" data-timeline-slide href={item.href} rel="external" aria-label={`Open Aero India album, photo ${index + 1} of ${item.photos?.length}`}>
                       <img src={photo.src} alt={photo.alt} loading={index === 0 ? "eager" : "lazy"} />
                     </a>
                   ))}
@@ -61,13 +74,63 @@ const { items } = Astro.props;
   .right-now__item > p:not(.section-label) { color: var(--muted); font-size: 0.92rem; }
   .right-now__item--spotify-player { grid-template-columns: minmax(0, 1fr); }
   .right-now__spotify-player { display: block; width: 100%; height: 152px; border: 0; border-radius: 0.7rem; }
-  .right-now__item--photo-carousel { overflow: hidden; padding-bottom: 0.85rem; }
+  .right-now__item--photo-carousel { padding-bottom: 0.85rem; }
   .right-now__carousel { min-width: 0; }
-  .right-now__track { display: flex; gap: 0.65rem; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-inline: contain; scrollbar-width: thin; scrollbar-color: var(--mast-line) transparent; padding-bottom: 0.5rem; }
+  .right-now__timeline-bar { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.45rem; }
+  .right-now__timeline-status { color: var(--muted); font-family: var(--font-mono); font-size: 0.68rem !important; letter-spacing: 0.045em; text-transform: uppercase; }
+  .right-now__timeline-controls { display: flex; gap: 0.35rem; }
+  .right-now__timeline-button { min-height: 2rem; border: 1px solid var(--line); border-radius: 0.3rem; background: transparent; color: var(--ink); font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.035em; text-transform: uppercase; padding: 0.25rem 0.55rem; transition: background-color 180ms ease-out, border-color 180ms ease-out; }
+  .right-now__timeline-button:not(:disabled):hover { border-color: var(--mast-line); background: var(--card-hover); }
+  .right-now__timeline-button:disabled { cursor: not-allowed; opacity: 0.42; }
+  .right-now__track { display: flex; gap: 0.65rem; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-inline: contain; scrollbar-width: thin; scrollbar-color: var(--mast-line) transparent; padding: 0.15rem 0.25rem 0.5rem; }
   .right-now__slide { flex: 0 0 86%; aspect-ratio: 4 / 3; scroll-snap-align: start; overflow: hidden; border: 1px solid var(--line); border-radius: 0.45rem; background: var(--surface-raised); }
-  .right-now__slide img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform 180ms ease-out; }
-  .right-now__slide:hover img { transform: scale(1.025); }
+  .right-now__slide img { display: block; width: 100%; height: 100%; object-fit: cover; }
   .right-now__carousel-hint { margin-top: 0.15rem !important; color: var(--muted); font-family: var(--font-mono); font-size: 0.68rem !important; }
   .right-now__carousel-hint a { color: var(--ink); }
   @media (min-width: 720px) { .right-now__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .right-now__item--spotify-player { grid-column: span 2; } }
 </style>
+
+<script>
+  document.querySelectorAll<HTMLElement>("[data-photo-timeline]").forEach((timeline) => {
+    const track = timeline.querySelector<HTMLElement>(".right-now__track");
+    const slides = Array.from(timeline.querySelectorAll<HTMLElement>("[data-timeline-slide]"));
+    const previous = timeline.querySelector<HTMLButtonElement>("[data-timeline-previous]");
+    const next = timeline.querySelector<HTMLButtonElement>("[data-timeline-next]");
+    const current = timeline.querySelector<HTMLElement>("[data-timeline-current]");
+
+    if (!track || slides.length === 0 || !previous || !next || !current) return;
+
+    let activeIndex = 0;
+    let scrollFrame: number | undefined;
+
+    const update = () => {
+      const trackLeft = track.getBoundingClientRect().left;
+      activeIndex = slides.reduce((nearestIndex, slide, index) => {
+        const nearestDistance = Math.abs(slides[nearestIndex].getBoundingClientRect().left - trackLeft);
+        const distance = Math.abs(slide.getBoundingClientRect().left - trackLeft);
+        return distance < nearestDistance ? index : nearestIndex;
+      }, 0);
+
+      current.textContent = `Photo ${activeIndex + 1}`;
+      previous.disabled = activeIndex === 0;
+      next.disabled = activeIndex === slides.length - 1;
+    };
+
+    const moveTo = (index: number) => {
+      const target = Math.max(0, Math.min(index, slides.length - 1));
+      track.scrollTo({
+        left: slides[target].offsetLeft - track.offsetLeft,
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"
+      });
+    };
+
+    previous.addEventListener("click", () => moveTo(activeIndex - 1));
+    next.addEventListener("click", () => moveTo(activeIndex + 1));
+    track.addEventListener("scroll", () => {
+      window.cancelAnimationFrame(scrollFrame ?? 0);
+      scrollFrame = window.requestAnimationFrame(update);
+    }, { passive: true });
+    window.addEventListener("resize", update, { passive: true });
+    update();
+  });
+</script>
