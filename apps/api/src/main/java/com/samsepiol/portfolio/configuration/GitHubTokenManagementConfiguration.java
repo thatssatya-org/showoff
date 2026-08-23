@@ -5,6 +5,7 @@ import com.samsepiol.library.encryption.credential.CredentialEnvelopeCipher;
 import com.samsepiol.library.encryption.credential.CredentialKeyResolver;
 import com.samsepiol.library.core.security.management.ManagementAuthorizationBoundary;
 import com.samsepiol.library.core.security.management.PolicyBackedManagementAuthorization;
+import com.samsepiol.library.core.util.DateTimeUtils;
 import com.samsepiol.library.mongo.Repository;
 import com.samsepiol.library.mongo.codec.CodecSupplier;
 import com.samsepiol.library.token.management.DefaultTokenManagementService;
@@ -41,7 +42,7 @@ public class GitHubTokenManagementConfiguration {
 
     @Bean
     CredentialEnvelopeCipher gitHubTokenEnvelopeCipher(CredentialKeyResolver gitHubTokenCredentialKeyResolver) {
-        return new AesGcmCredentialEnvelopeCipher(gitHubTokenCredentialKeyResolver, System::currentTimeMillis);
+        return new AesGcmCredentialEnvelopeCipher(gitHubTokenCredentialKeyResolver, DateTimeUtils::currentEpochMillis);
     }
 
     @Bean

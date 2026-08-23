@@ -1,8 +1,5 @@
 package com.samsepiol.portfolio.provider;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.samsepiol.library.http.client.HttpClient;
-import com.samsepiol.library.http.response.HttpResponseEnvelope;
 import com.samsepiol.library.token.management.TokenManagementService;
 import com.samsepiol.library.token.management.TokenUse;
 import com.samsepiol.portfolio.configuration.GitHubRefreshProperties;
@@ -10,6 +7,8 @@ import com.samsepiol.portfolio.configuration.GitHubTokenProperties;
 import com.samsepiol.portfolio.domain.CapabilityType;
 import com.samsepiol.portfolio.repository.GitHubActivitySnapshotRepository;
 import com.samsepiol.portfolio.repository.entity.ExternalSnapshotEntity;
+import com.samsepiol.portfolio.provider.github.GitHubActivityClient;
+import com.samsepiol.portfolio.provider.github.GitHubActivityFetchResponse;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -19,6 +18,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -27,9 +27,10 @@ import static org.mockito.Mockito.when;
 class GitHubActivitySnapshotStrategyTest {
     @Test
     void sendsTheStoredEtagAndAtomicallyReplacesOnlyThePublicEventProjection() {
-        var httpClient = mock(HttpClient.class);
+        var gitHubActivityClient = mock(GitHubActivityClient.class);
         var tokenManagementService = mock(TokenManagementService.class);
         var repository = mock(GitHubActivitySnapshotRepository.class);
+        var snapshotMapper = mock(GitHubActivitySnapshotMapper.class);
         var properties = new GitHubRefreshProperties(true, true, "github-primary", "octocat", "0 */15 * * * *");
         var tokenProperties = new GitHubTokenProperties("github-token-v1", "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
                 List.of("172.30.0.0/24"), List.of("100.64.0.0/10"));
@@ -38,33 +39,34 @@ class GitHubActivitySnapshotStrategyTest {
                 .sourceLabel("GitHub").refreshedAt(java.time.Instant.EPOCH).validUntil(java.time.Instant.EPOCH)
                 .content(Map.of("events", "[]")).publicApproved(true).profileEnabled(true).providerEtag("\"prior\"").build();
         when(repository.find("github-primary")).thenReturn(Optional.of(existing));
-        when(httpClient.executeWithResponse(any())).thenReturn(new HttpResponseEnvelope(200, Map.of("ETag", List.of("\"next\"")),
-                "[{\"type\":\"PushEvent\",\"created_at\":\"2026-08-23T12:34:56Z\",\"repo\":{\"name\":\"owner/public-repo\"},\"payload\":{\"commits\":[{\"message\":\"never persist\"}]}}]"));
+        var response = GitHubActivityFetchResponse.builder().statusCode(200).etag("\"next\"").events(List.of()).build();
+        when(gitHubActivityClient.fetchPublicEvents(any(), eq("\"prior\""))).thenReturn(response);
         doAnswer(invocation -> ((TokenUse<?>) invocation.getArgument(2)).use("token-not-to-log".toCharArray()))
                 .when(tokenManagementService).useForInternalIntegration(any(), any(), any());
 
-        var strategy = new GitHubActivitySnapshotStrategy(httpClient, tokenManagementService, repository, properties,
-                tokenProperties, new ObjectMapper());
+        when(snapshotMapper.toEntity(eq(response), eq(properties), any(), any())).thenReturn(existing);
+        when(snapshotMapper.toPublicSnapshot(existing)).thenReturn(com.samsepiol.portfolio.domain.PublicCapabilitySnapshot.builder()
+                .capability(CapabilityType.GITHUB_ACTIVITY).state(com.samsepiol.portfolio.domain.CapabilityState.HEALTHY)
+                .title("Recent public activity").sourceLabel("GitHub").refreshedAt(java.time.Instant.EPOCH)
+                .content(Map.of("events", "[]")).build());
+        var strategy = new GitHubActivitySnapshotStrategy(gitHubActivityClient, tokenManagementService, repository, properties,
+                tokenProperties, snapshotMapper);
         var result = strategy.refresh(CapabilitySnapshotRefreshRequest.builder().capability(CapabilityType.GITHUB_ACTIVITY).build());
 
-        var request = ArgumentCaptor.forClass(com.samsepiol.library.http.request.ApiRequest.class);
-        verify(httpClient).executeWithResponse(request.capture());
-        assertThat(request.getValue().getHeaders()).containsEntry("If-None-Match", "\"prior\"")
-                .containsEntry("Authorization", "Bearer token-not-to-log");
+        verify(gitHubActivityClient).fetchPublicEvents(any(), eq("\"prior\""));
         var replacement = ArgumentCaptor.forClass(ExternalSnapshotEntity.class);
         verify(repository).replace(replacement.capture());
-        assertThat(replacement.getValue().getProviderEtag()).isEqualTo("\"next\"");
         assertThat(replacement.getValue().getContent().get("events"))
-                .contains("PushEvent", "2026-08-23", "owner/public-repo")
-                .doesNotContain("never persist", "payload");
+                .isEqualTo("[]");
         assertThat(result.getSnapshot().getContent()).isEqualTo(replacement.getValue().getContent());
     }
 
     @Test
     void leavesTheLastKnownGoodSnapshotUntouchedOnNotModified() {
-        var httpClient = mock(HttpClient.class);
+        var gitHubActivityClient = mock(GitHubActivityClient.class);
         var tokenManagementService = mock(TokenManagementService.class);
         var repository = mock(GitHubActivitySnapshotRepository.class);
+        var snapshotMapper = mock(GitHubActivitySnapshotMapper.class);
         var properties = new GitHubRefreshProperties(true, true, "github-primary", "octocat", "0 */15 * * * *");
         var tokenProperties = new GitHubTokenProperties("github-token-v1", "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
                 List.of("172.30.0.0/24"), List.of("100.64.0.0/10"));
@@ -73,12 +75,17 @@ class GitHubActivitySnapshotStrategyTest {
                 .sourceLabel("GitHub").refreshedAt(java.time.Instant.EPOCH).validUntil(java.time.Instant.EPOCH)
                 .content(Map.of("events", "[]")).publicApproved(true).profileEnabled(true).providerEtag("\"prior\"").build();
         when(repository.find("github-primary")).thenReturn(Optional.of(existing));
-        when(httpClient.executeWithResponse(any())).thenReturn(new HttpResponseEnvelope(304, Map.of("ETag", List.of("\"prior\"")), ""));
+        when(gitHubActivityClient.fetchPublicEvents(any(), eq("\"prior\"")))
+                .thenReturn(GitHubActivityFetchResponse.builder().statusCode(304).etag("\"prior\"").events(List.of()).build());
         doAnswer(invocation -> ((TokenUse<?>) invocation.getArgument(2)).use("token-not-to-log".toCharArray()))
                 .when(tokenManagementService).useForInternalIntegration(any(), any(), any());
+        when(snapshotMapper.toPublicSnapshot(existing)).thenReturn(com.samsepiol.portfolio.domain.PublicCapabilitySnapshot.builder()
+                .capability(CapabilityType.GITHUB_ACTIVITY).state(com.samsepiol.portfolio.domain.CapabilityState.HEALTHY)
+                .title("Recent public activity").sourceLabel("GitHub").refreshedAt(java.time.Instant.EPOCH)
+                .content(Map.of("events", "[]")).build());
 
-        var strategy = new GitHubActivitySnapshotStrategy(httpClient, tokenManagementService, repository, properties,
-                tokenProperties, new ObjectMapper());
+        var strategy = new GitHubActivitySnapshotStrategy(gitHubActivityClient, tokenManagementService, repository, properties,
+                tokenProperties, snapshotMapper);
         var result = strategy.refresh(CapabilitySnapshotRefreshRequest.builder().capability(CapabilityType.GITHUB_ACTIVITY).build());
 
         org.mockito.Mockito.verify(repository, org.mockito.Mockito.never()).replace(any());

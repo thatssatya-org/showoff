@@ -8,8 +8,8 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @ConfigurationProperties(prefix = "portfolio.github-refresh")
 public record GitHubRefreshProperties(
-        boolean enabled,
-        boolean publicApproved,
+        Boolean enabled,
+        Boolean publicApproved,
         @NotBlank String profileId,
         @NotBlank @Pattern(regexp = "[A-Za-z0-9-]{1,39}") String handle,
         @NotBlank String cron) {

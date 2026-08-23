@@ -13,6 +13,18 @@ server:
   compression:
     enabled: true
     min-response-size: 1024
+http-config:
+  service-configs:
+    github:
+      base-url: "api.github.com/users/${portfolio.github-refresh.handle}"
+      secured: true
+      api-configs:
+        public-events:
+          method: GET
+          path: "/events/public?per_page=8"
+          request-logging-enabled: false
+          response-logging-enabled: false
+          max-response-body-bytes: 262144
 portfolio:
   github-refresh:
     enabled: false
