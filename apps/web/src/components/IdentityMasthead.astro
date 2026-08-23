@@ -1,5 +1,6 @@
 ---
 import type { SocialLink } from "../data/site";
+import SocialIcon from "./SocialIcon.astro";
 
 interface Props {
   name: string;
@@ -14,6 +15,7 @@ interface Props {
 }
 
 const { name, identityLine, themes, thesis, location, contactLabel, contactHref, socialLinks, newsletterEnabled } = Astro.props;
+
 ---
 
 <header class="identity-masthead">
@@ -28,7 +30,7 @@ const { name, identityLine, themes, thesis, location, contactLabel, contactHref,
   <p class="location">Based in {location}. <a href={contactHref} rel="me external">{contactLabel}</a>.</p>
   <nav class="social-rail" aria-label="Profiles and contact">
     {
-      socialLinks.map((link) => <a href={link.href} rel="me external">{link.label}</a>)
+      socialLinks.map((link) => <a href={link.href} rel="me external" aria-label={link.label} title={link.label}><SocialIcon label={link.label} /></a>)
     }
   </nav>
 </header>
@@ -105,16 +107,33 @@ const { name, identityLine, themes, thesis, location, contactLabel, contactHref,
   .social-rail {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem 1rem;
+    gap: 0.5rem;
     margin-top: 0.25rem;
     font-size: 0.9rem;
   }
 
-  .social-rail a,
-  .social-rail span {
-    min-height: 2rem;
+  .social-rail a {
+    width: 2.5rem;
+    min-height: 2.5rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: var(--muted);
     display: inline-flex;
     align-items: center;
+    justify-content: center;
+    transition: border-color 180ms ease-out, background-color 180ms ease-out, color 180ms ease-out;
+  }
+
+  .social-rail a:hover,
+  .social-rail a:focus-visible {
+    border-color: var(--signal);
+    background: color-mix(in srgb, var(--signal) 12%, transparent);
+    color: var(--signal);
+  }
+
+  .social-rail :global(.social-icon) {
+    width: 1.1rem;
+    height: 1.1rem;
   }
 
   @media (max-width: 500px) {
