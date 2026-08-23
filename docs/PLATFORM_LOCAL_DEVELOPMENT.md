@@ -12,7 +12,7 @@ integration work only; this does not change the deployment/release gate.
 | Source repository | Revision | Installed coordinate |
 | --- | --- | --- |
 | `platform/samsepiol-bom` | `01721c1` (`master`, no local tag) | `com.samsepiol:bom:0.0.5-BOM-SNAPSHOT` |
-| `platform/samsepiol-library` | `627f2a0` (`master`, no local tag) | `com.samsepiol.library:*:0.0.4-LIBRARY-SNAPSHOT` |
+| `platform/samsepiol-library` | `44395e5` (`master`, no local tag) | `com.samsepiol.library:*:0.0.4-LIBRARY-SNAPSHOT` |
 
 The BOM declares Java 21 and Spring Boot 3.3.4. The verified toolchain for
 this local build is Temurin 21.0.12.1 and Maven 3.9.9. In Showoff, run Maven

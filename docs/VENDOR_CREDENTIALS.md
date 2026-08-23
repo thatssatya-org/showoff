@@ -22,7 +22,7 @@ Do not send any secret, refresh token, private key, password, recovery code, or 
 
 ### GitHub operator proxy prerequisite
 
-Leave `PORTFOLIO_GITHUB_TOKEN_ENABLED=false` until all GitHub token settings are populated. In particular, `PORTFOLIO_GITHUB_TOKEN_TRUSTED_PROXY_CIDRS` must contain **only** the private network CIDR assigned to the local web reverse-proxy hop that reaches the API. It must not contain a public, LAN, or Tailnet client CIDR. The reverse proxy strips caller-provided forwarding headers and writes the canonical client address; the API trusts that address only from this configured proxy CIDR, then checks `PORTFOLIO_GITHUB_TOKEN_TAILNET_CIDRS`. A missing or broad value is a deployment error, not a convenience fallback.
+Leave `PORTFOLIO_GITHUB_TOKEN_ENABLED=false` until all GitHub token settings are populated. In the supplied local Compose deployment, `PORTFOLIO_GITHUB_TOKEN_TRUSTED_PROXY_CIDRS` is exactly `172.30.0.0/24`, the pinned `portfolio-edge` network. It must not contain a public, LAN, Tailnet, or Tailscale Serve bridge CIDR. Nginx alone may trust the local Serve bridge to recover the original Tailnet client from `X-Forwarded-For`; it then strips every caller-provided forwarding header and writes the canonical client address. The API trusts that canonical address only from the edge CIDR, then checks `PORTFOLIO_GITHUB_TOKEN_TAILNET_CIDRS`. A missing or broad value is a deployment error, not a convenience fallback.
 
 ## 2. Public configuration — gather, but not secret
 
