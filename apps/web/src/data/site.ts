@@ -32,11 +32,13 @@ export const siteIdentity = {
   contactHref: "https://www.instagram.com/thatssatya",
   githubProfile: "https://github.com/thatssatya",
   socialLinks: [
-    { label: "GitHub", href: "https://github.com/thatssatya" },
-    { label: "Instagram", href: "https://www.instagram.com/thatssatya" },
     { label: "Spotify", href: "https://open.spotify.com/user/ubhku2hccfwxobdfjzbh7dk20" },
+    { label: "X", href: "https://x.com/thatssatya" },
+    { label: "Instagram", href: "https://www.instagram.com/thatssatya" },
     { label: "LinkedIn", href: "https://www.linkedin.com/in/thatssatya" },
-    { label: "Buy me a coffee", href: "https://buymeacoffee.com/thatssatya" }
+    { label: "GitHub", href: "https://github.com/thatssatya" },
+    { label: "Buy me a coffee", href: "https://buymeacoffee.com/thatssatya" },
+    { label: "YouTube", href: "https://www.youtube.com/@TheMotoDirector" }
   ] satisfies readonly SocialLink[]
 } as const;
 

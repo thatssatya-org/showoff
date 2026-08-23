@@ -323,7 +323,7 @@ Every collection has an explicit ID prefix, a schema version, retention policy, 
 - [x] Redirect policy approved: no legacy redirect is required.
 - [x] Public masthead, Bengaluru location disclosure, Instagram-DM contact route, no-behavioural-analytics default, social rail, support link, newsletter sender/consent copy, and the privacy disclosure are owner-approved and implemented in typed static content.
 - [x] Owner-approved curated entries are implemented: `Shaukeens`, `Chat with AI!`, Spotify `On Repeat`, and the `Aero India '23` Google Photos album. Spotify is an official embed with a direct fallback link; Aero India uses a labelled carousel and direct album link.
-- [ ] Explicitly verify, retain, or retire any remaining legacy hub destinations not supplied above (for example X, YouTube, or email) before a public launch. Do not infer their URLs or render placeholders as live destinations.
+- [x] Remaining legacy destinations resolved: retain X at `https://x.com/thatssatya`; retain YouTube at `https://www.youtube.com/@TheMotoDirector`; retire the legacy email contact link. Do not render an email placeholder.
 - [ ] Approve featured project content, homelab-safe fields, public mail domain, and vendor applications/credentials only for integrations that will actually be enabled.
 
 ### Phase 1 — static portfolio foundation
