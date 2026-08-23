@@ -49,7 +49,7 @@ const enableLiveCapabilities = import.meta.env.PUBLIC_ENABLE_LIVE_CAPABILITIES =
         <ProjectGrid projects={projects} compact={projects.length === 1} />
       </section>
 
-      {enableLiveCapabilities && <CapabilitySection client:visible />}
+      {enableLiveCapabilities && <CapabilitySection client:load />}
 
       <div class="home-section section-rule">
         <HomelabPreview {...homelabStory} />

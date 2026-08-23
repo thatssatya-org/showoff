@@ -28,8 +28,8 @@ public interface GitHubActivitySnapshotMapper {
     @Mapping(target = "state", expression = "java(com.samsepiol.portfolio.domain.CapabilityState.HEALTHY)")
     @Mapping(target = "title", constant = "Recent public activity")
     @Mapping(target = "sourceLabel", constant = "GitHub")
-    @Mapping(target = "refreshedAt", source = "refreshedAt")
-    @Mapping(target = "validUntil", source = "validUntil")
+    @Mapping(target = "refreshedAtEpochMillis", source = "refreshedAt", qualifiedByName = "toEpochMillis")
+    @Mapping(target = "validUntilEpochMillis", source = "validUntil", qualifiedByName = "toEpochMillis")
     @Mapping(target = "content", source = "response.events", qualifiedByName = "toContent")
     @Mapping(target = "publicApproved", source = "properties.publicApproved")
     @Mapping(target = "profileEnabled", constant = "true")
@@ -37,7 +37,18 @@ public interface GitHubActivitySnapshotMapper {
     ExternalSnapshotEntity toEntity(GitHubActivityFetchResponse response, GitHubRefreshProperties properties,
                                     Instant refreshedAt, Instant validUntil);
 
+    @Mapping(target = "refreshedAt", source = "refreshedAtEpochMillis", qualifiedByName = "toInstant")
     PublicCapabilitySnapshot toPublicSnapshot(ExternalSnapshotEntity entity);
+
+    @Named("toEpochMillis")
+    default Long toEpochMillis(Instant value) {
+        return value.toEpochMilli();
+    }
+
+    @Named("toInstant")
+    default Instant toInstant(Long value) {
+        return Instant.ofEpochMilli(value);
+    }
 
     @Named("toDefaultZoneDate")
     default String toDefaultZoneDate(String value) {

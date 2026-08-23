@@ -14,7 +14,6 @@ import lombok.extern.jackson.Jacksonized;
 import org.bson.codecs.pojo.annotations.BsonCreator;
 import org.bson.codecs.pojo.annotations.BsonProperty;
 
-import java.time.Instant;
 import java.util.Map;
 
 @Value
@@ -42,11 +41,11 @@ public final class ExternalSnapshotEntity extends Entity {
     @BsonProperty("sourceLabel")
     String sourceLabel;
     @NonNull
-    @BsonProperty("refreshedAt")
-    Instant refreshedAt;
+    @BsonProperty("refreshedAtEpochMillis")
+    Long refreshedAtEpochMillis;
     @NonNull
-    @BsonProperty("validUntil")
-    Instant validUntil;
+    @BsonProperty("validUntilEpochMillis")
+    Long validUntilEpochMillis;
     @NonNull
     @BsonProperty("content")
     @Singular("contentEntry")
@@ -65,8 +64,8 @@ public final class ExternalSnapshotEntity extends Entity {
             @NonNull @BsonProperty("state") CapabilityState state,
             @NonNull @BsonProperty("title") String title,
             @NonNull @BsonProperty("sourceLabel") String sourceLabel,
-            @NonNull @BsonProperty("refreshedAt") Instant refreshedAt,
-            @NonNull @BsonProperty("validUntil") Instant validUntil,
+            @NonNull @BsonProperty("refreshedAtEpochMillis") Long refreshedAtEpochMillis,
+            @NonNull @BsonProperty("validUntilEpochMillis") Long validUntilEpochMillis,
             @NonNull @BsonProperty("content") Map<String, String> content,
             @BsonProperty("publicApproved") boolean publicApproved,
             @BsonProperty("profileEnabled") boolean profileEnabled,
@@ -76,8 +75,8 @@ public final class ExternalSnapshotEntity extends Entity {
         this.state = state;
         this.title = title;
         this.sourceLabel = sourceLabel;
-        this.refreshedAt = refreshedAt;
-        this.validUntil = validUntil;
+        this.refreshedAtEpochMillis = refreshedAtEpochMillis;
+        this.validUntilEpochMillis = validUntilEpochMillis;
         this.content = Map.copyOf(content);
         this.publicApproved = publicApproved;
         this.profileEnabled = profileEnabled;

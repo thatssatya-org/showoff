@@ -139,7 +139,16 @@ services:
 networks:
   portfolio-private:
     internal: true
+    ipam:
+      config:
+        # Stable subnets make the reverse-proxy trust boundary reproducible.
+        # Do not replace this with Docker's auto-assigned pool: Nginx and the
+        # API deliberately trust only the edge proxy network.
+        - subnet: 172.31.0.0/24
   portfolio-edge:
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
 
 volumes:
   portfolio-mongodb-data:
