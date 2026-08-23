@@ -10,7 +10,7 @@ import ProjectGrid from "../components/ProjectGrid.astro";
 import RightNowCollection from "../components/RightNowCollection.astro";
 import SignalMast from "../components/SignalMast.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { homelabStory, mustListen, newsletterConsentVersion, publicFocus, rightNowItems, siteIdentity } from "../data/site";
+import { homelabStory, mustListen, newsletterConsent, publicFocus, rightNowItems, siteIdentity } from "../data/site";
 
 const projects = (await getCollection("projects", ({ data }) => data.visible))
   .sort((left, right) => left.data.order - right.data.order)
@@ -62,7 +62,7 @@ const enableLiveCapabilities = import.meta.env.PUBLIC_ENABLE_LIVE_CAPABILITIES =
           <h2 id="newsletter-title">Occasional notes. No tracking pixels.</h2>
           <p>Subscriptions use confirmation email and stay inside the self-hosted newsletter boundary.</p>
         </div>
-        <NewsletterForm client:load consentVersion={newsletterConsentVersion} />
+        <NewsletterForm client:load consentVersion={newsletterConsent.version} consentText={newsletterConsent.text} />
       </section>
     </div>
   </div>

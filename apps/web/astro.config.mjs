@@ -16,7 +16,7 @@ const localApiProxy = localApiOrigin
   : undefined;
 
 export default defineConfig({
-  site: configuredSite ?? "https://portfolio.invalid",
+  site: configuredSite || "https://thatssatya.github.io",
   integrations: [react(), sitemap()],
   vite: {
     plugins: [tailwindcss()],

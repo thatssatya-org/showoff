@@ -2,7 +2,7 @@
 import NewsletterForm from "../components/NewsletterForm";
 import SignalMast from "../components/SignalMast.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { newsletterConsentVersion } from "../data/site";
+import { newsletterConsent } from "../data/site";
 ---
 
 <BaseLayout title="Newsletter — Satyajit Roy" description="A low-noise, double-opt-in newsletter without tracker pixels.">
@@ -12,7 +12,7 @@ import { newsletterConsentVersion } from "../data/site";
       <p class="eyebrow">Low-noise dispatch</p>
       <h1 id="newsletter-title">Occasional notes. No surveillance residue.</h1>
       <p class="intro">The newsletter runs through a self-hosted list manager. Confirm your address through double opt-in before anything is sent. Nothing on this page uses tracking pixels.</p>
-      <NewsletterForm client:load consentVersion={newsletterConsentVersion} />
+      <NewsletterForm client:load consentVersion={newsletterConsent.version} consentText={newsletterConsent.text} />
       <div class="newsletter-page__details section-rule">
         <h2>What is retained</h2>
         <p>Subscription consent evidence and the address needed to deliver and manage the list. The public site does not expose list administration, delivery systems, or subscriber data.</p>

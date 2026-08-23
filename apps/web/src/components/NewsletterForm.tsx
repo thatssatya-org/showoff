@@ -4,11 +4,12 @@ type FormState = "idle" | "sending" | "success" | "rate_limited" | "network_erro
 
 interface Props {
   consentVersion: string;
+  consentText: string;
 }
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/u;
 
-export default function NewsletterForm({ consentVersion }: Props) {
+export default function NewsletterForm({ consentVersion, consentText }: Props) {
   const emailId = useId();
   const errorId = useId();
   const statusId = useId();
@@ -87,7 +88,7 @@ export default function NewsletterForm({ consentVersion }: Props) {
         <button type="submit" disabled={state === "sending"}>{state === "sending" ? "Sending" : "Subscribe"}</button>
       </div>
       <label className="honeypot" htmlFor={`${emailId}-website`}>Leave this blank<input id={`${emailId}-website`} name="website" tabIndex={-1} autoComplete="off" /></label>
-      <p className="consent">By subscribing, you agree to the versioned newsletter consent and can unsubscribe at any time.</p>
+      <p className="consent">{consentText}</p>
       {error ? <p id={errorId} className="error" role="alert">{error}</p> : null}
       <p id={statusId} className="status" aria-live="polite">{status}</p>
     </form>

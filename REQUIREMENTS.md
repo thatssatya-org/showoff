@@ -317,6 +317,15 @@ Every collection has an explicit ID prefix, a schema version, retention policy, 
 2. Approve profile wording—including `Code | Music | Bikes | Cats`—professional disclosure, social handles, featured projects, right-now entries, homelab-safe fields, and privacy text.
 3. Create vendor applications only for integrations worth the review/maintenance cost. Start with GitHub, newsletter, and manually curated content.
 
+#### Phase 0 status — 2026-08-23
+
+- [x] Canonical public URL approved: `https://thatssatya.github.io`.
+- [x] Redirect policy approved: no legacy redirect is required.
+- [x] Public masthead, Bengaluru location disclosure, Instagram-DM contact route, no-behavioural-analytics default, social rail, support link, newsletter sender/consent copy, and the privacy disclosure are owner-approved and implemented in typed static content.
+- [x] Owner-approved curated entries are implemented: `Shaukeens`, `Chat with AI!`, Spotify `On Repeat`, and the `Aero India '23` Google Photos album. Spotify is an official embed with a direct fallback link; Aero India uses a labelled carousel and direct album link.
+- [ ] Explicitly verify, retain, or retire any remaining legacy hub destinations not supplied above (for example X, YouTube, or email) before a public launch. Do not infer their URLs or render placeholders as live destinations.
+- [ ] Approve featured project content, homelab-safe fields, public mail domain, and vendor applications/credentials only for integrations that will actually be enabled.
+
 ### Phase 1 — static portfolio foundation
 
 1. Scaffold Astro frontend and Spring Boot API as separate apps in this repository. The backend imports `samsepiol-bom` and consumes released `samsepiol-library` modules before any portfolio feature code is added.

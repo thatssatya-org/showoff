@@ -13,7 +13,7 @@ target/
 # Local secrets and persistent volumes
 secrets/
 credentials/
-data/
+/data/
 postgres-data/
 volumes/
 *.pem

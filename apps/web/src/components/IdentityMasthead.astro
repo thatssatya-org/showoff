@@ -6,10 +6,13 @@ interface Props {
   identityLine: string;
   themes: readonly string[];
   thesis: string;
+  location: string;
+  contactLabel: string;
+  contactHref: string;
   socialLinks: readonly SocialLink[];
 }
 
-const { name, identityLine, themes, thesis, socialLinks } = Astro.props;
+const { name, identityLine, themes, thesis, location, contactLabel, contactHref, socialLinks } = Astro.props;
 ---
 
 <header class="identity-masthead">
@@ -21,15 +24,10 @@ const { name, identityLine, themes, thesis, socialLinks } = Astro.props;
   <p class="identity-line">{identityLine}</p>
   <p class="themes">{themes.join("  |  ")}</p>
   <p class="thesis">{thesis}</p>
+  <p class="location">Based in {location}. <a href={contactHref} rel="me external">{contactLabel}</a>.</p>
   <nav class="social-rail" aria-label="Profiles and contact">
     {
-      socialLinks.map((link) =>
-        link.href ? (
-          <a href={link.href} rel="me external">{link.label}</a>
-        ) : (
-          <span title="Awaiting owner approval">{link.label}<span class="pending"> · pending</span></span>
-        )
-      )
+      socialLinks.map((link) => <a href={link.href} rel="me external">{link.label}</a>)
     }
   </nav>
 </header>
@@ -78,7 +76,8 @@ const { name, identityLine, themes, thesis, socialLinks } = Astro.props;
   }
 
   .themes,
-  .thesis {
+  .thesis,
+  .location {
     max-width: 54rem;
     margin: 0;
   }
@@ -95,6 +94,12 @@ const { name, identityLine, themes, thesis, socialLinks } = Astro.props;
     color: var(--muted);
   }
 
+  .location {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
   .social-rail {
     display: flex;
     flex-wrap: wrap;
@@ -108,15 +113,6 @@ const { name, identityLine, themes, thesis, socialLinks } = Astro.props;
     min-height: 2rem;
     display: inline-flex;
     align-items: center;
-  }
-
-  .social-rail span {
-    color: var(--muted);
-  }
-
-  .pending {
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
   }
 
   @media (max-width: 500px) {
