@@ -90,3 +90,19 @@ Open `http://127.0.0.1:4321`. The frontend proxies `/api` to the backend over
 the Docker network. Stop the demo with `docker compose --env-file .env -f
 compose.local.yaml down`; append `--volumes` only when discarding local data is
 intended.
+
+### Enable the GitHub activity card
+
+The public card is intentionally absent until the operator explicitly approves
+it. Set these values in the untracked `.env`, rebuild the API, and submit a
+fine-grained GitHub PAT once from the Tailnet-only operator page:
+
+```dotenv
+PORTFOLIO_GITHUB_REFRESH_ENABLED=true
+PORTFOLIO_GITHUB_REFRESH_PUBLIC_APPROVED=true
+PORTFOLIO_GITHUB_REFRESH_HANDLE=thatssatya
+```
+
+Open `/operator/github/` from a Tailnet address and save the token. The API
+stores it encrypted and the refresh worker writes an approved cached snapshot
+on its next schedule; the frontend then renders the GitHub activity component.
