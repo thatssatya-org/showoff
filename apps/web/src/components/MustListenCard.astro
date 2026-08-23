@@ -1,0 +1,90 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  href: string;
+  embedUrl: string;
+}
+
+const { title, description, href, embedUrl } = Astro.props;
+---
+
+<article class="must-listen card card-reveal">
+  <header class="must-listen__header">
+    <div class="spotify-mark" aria-hidden="true">●</div>
+    <div>
+      <p class="section-label">Must listen · Spotify playlist</p>
+      <h2>{title}</h2>
+    </div>
+    <a class="open-link" href={href} rel="external">Open ↗</a>
+  </header>
+  <p class="must-listen__description">{description}</p>
+  <iframe
+    class="spotify-player"
+    src={embedUrl}
+    title={`Spotify playlist: ${title}`}
+    loading="lazy"
+    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+  ></iframe>
+</article>
+
+<style>
+  .must-listen {
+    min-height: 100%;
+    padding: 1.25rem;
+  }
+
+  .must-listen__header {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 0.8rem;
+    align-items: center;
+  }
+
+  .spotify-mark {
+    display: grid;
+    width: 2.65rem;
+    height: 2.65rem;
+    place-items: center;
+    border-radius: 50%;
+    background: #1ed760;
+    color: #101319;
+    font-size: 2.3rem;
+    line-height: 1;
+  }
+
+  h2 {
+    margin: 0.1rem 0 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 4vw, 2.5rem);
+    letter-spacing: -0.05em;
+    line-height: 0.9;
+  }
+
+  p { margin: 0; }
+
+  .must-listen__description {
+    margin-top: 1rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  .open-link {
+    min-height: 2.25rem;
+    display: inline-flex;
+    align-items: center;
+    color: var(--ink);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    text-decoration: none;
+  }
+
+  .spotify-player {
+    display: block;
+    width: 100%;
+    height: 352px;
+    margin-top: 1rem;
+    border: 0;
+    border-radius: 0.75rem;
+  }
+</style>

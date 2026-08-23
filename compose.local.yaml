@@ -1,0 +1,135 @@
+name: showoff-local
+
+services:
+  mongodb:
+    image: mongo:8.0.8
+    restart: unless-stopped
+    mem_limit: 384m
+    cpus: 0.75
+    pids_limit: 256
+    command: ["mongod", "--auth", "--bind_ip_all", "--wiredTigerCacheSizeGB", "0.25"]
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:?set MONGO_INITDB_ROOT_USERNAME in the process environment}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:?set MONGO_INITDB_ROOT_PASSWORD in the process environment}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE:-portfolio}
+    ports:
+      - "127.0.0.1:${PORTFOLIO_MONGO_PORT:-27017}:27017"
+    volumes:
+      - portfolio-mongodb-data:/data/db
+    networks:
+      - portfolio-private
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --username \"$$MONGO_INITDB_ROOT_USERNAME\" --password \"$$MONGO_INITDB_ROOT_PASSWORD\" --authenticationDatabase admin --eval 'db.adminCommand({ ping: 1 }).ok' | grep 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    security_opt:
+      - no-new-privileges:true
+
+  temporal-postgresql:
+    image: postgres:16.4-alpine
+    restart: unless-stopped
+    mem_limit: 256m
+    cpus: 0.50
+    pids_limit: 192
+    environment:
+      POSTGRES_DB: ${TEMPORAL_POSTGRES_DB:-temporal}
+      POSTGRES_USER: ${TEMPORAL_POSTGRES_USER:?set TEMPORAL_POSTGRES_USER in the process environment}
+      POSTGRES_PASSWORD: ${TEMPORAL_POSTGRES_PASSWORD:?set TEMPORAL_POSTGRES_PASSWORD in the process environment}
+    volumes:
+      - portfolio-temporal-postgresql-data:/var/lib/postgresql/data
+    networks:
+      - portfolio-private
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready --username=\"$$POSTGRES_USER\" --dbname=\"$$POSTGRES_DB\""]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+    security_opt:
+      - no-new-privileges:true
+
+  temporal:
+    image: temporalio/auto-setup:1.25.2
+    restart: unless-stopped
+    mem_limit: 512m
+    cpus: 1.00
+    pids_limit: 384
+    depends_on:
+      temporal-postgresql:
+        condition: service_healthy
+    environment:
+      DB: postgres12
+      DB_PORT: "5432"
+      POSTGRES_SEEDS: temporal-postgresql
+      POSTGRES_USER: ${TEMPORAL_POSTGRES_USER:?set TEMPORAL_POSTGRES_USER in the process environment}
+      POSTGRES_PWD: ${TEMPORAL_POSTGRES_PASSWORD:?set TEMPORAL_POSTGRES_PASSWORD in the process environment}
+      POSTGRES_DB: ${TEMPORAL_POSTGRES_DB:-temporal}
+    ports:
+      - "127.0.0.1:${PORTFOLIO_TEMPORAL_PORT:-7233}:7233"
+    networks:
+      - portfolio-private
+    security_opt:
+      - no-new-privileges:true
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    image: showoff-api:local
+    restart: "no"
+    mem_limit: 512m
+    cpus: 0.75
+    pids_limit: 256
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME:?set MONGO_INITDB_ROOT_USERNAME in the process environment}:${MONGO_INITDB_ROOT_PASSWORD:?set MONGO_INITDB_ROOT_PASSWORD in the process environment}@mongodb:27017/${MONGO_INITDB_DATABASE:-portfolio}?authSource=admin
+      PORTFOLIO_PUBLIC_BASE_URL: ${PORTFOLIO_PUBLIC_BASE_URL:?set PORTFOLIO_PUBLIC_BASE_URL in the process environment}
+      SERVER_PORT: "8080"
+    networks:
+      - portfolio-private
+      - portfolio-edge
+    read_only: true
+    tmpfs:
+      - /tmp:mode=1777,noexec,nosuid,size=32m
+    security_opt:
+      - no-new-privileges:true
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+      args:
+        PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-http://127.0.0.1:4321}
+        PUBLIC_ENABLE_LIVE_CAPABILITIES: ${PUBLIC_ENABLE_LIVE_CAPABILITIES:-true}
+    image: showoff-web:local
+    restart: "no"
+    mem_limit: 192m
+    cpus: 0.50
+    pids_limit: 128
+    depends_on:
+      api:
+        condition: service_started
+    ports:
+      - "${PORTFOLIO_WEB_BIND_ADDRESS:-0.0.0.0}:${PORTFOLIO_WEB_PORT:-4321}:8080"
+    networks:
+      - portfolio-edge
+    read_only: true
+    tmpfs:
+      - /tmp:mode=1777,noexec,nosuid,size=16m
+      - /var/cache/nginx:mode=0755,noexec,nosuid,size=16m
+      - /var/run:mode=0755,noexec,nosuid,size=4m
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  portfolio-private:
+    internal: true
+  portfolio-edge:
+
+volumes:
+  portfolio-mongodb-data:
+  portfolio-temporal-postgresql-data:

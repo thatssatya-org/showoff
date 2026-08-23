@@ -1,0 +1,40 @@
+---
+import HomelabPreview from "../components/HomelabPreview.astro";
+import SignalMast from "../components/SignalMast.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { homelabStory } from "../data/site";
+---
+
+<BaseLayout title="Homelab — Satyajit Roy" description="A public-safe story about operating principles, not a service inventory.">
+  <div class="frame field-layout">
+    <SignalMast enabledSources={["systems"]} />
+    <div class="content-field homelab-page">
+      <header>
+        <p class="eyebrow">Homelab</p>
+        <h1>Useful systems. Deliberate silence.</h1>
+        <p>Public material is a bounded architecture story. Network maps, hostnames, addresses, ports, live health, capacity, and administrative paths stay private.</p>
+      </header>
+      <HomelabPreview {...homelabStory} />
+      <section class="principles section-rule" aria-labelledby="principles-title">
+        <p class="section-label">Operating principles</p>
+        <h2 id="principles-title">Containment is part of the design.</h2>
+        <ol>
+          {homelabStory.principles.map((principle) => <li>{principle}</li>)}
+        </ol>
+      </section>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .homelab-page { padding-block: clamp(2.5rem, 7vw, 6rem); }
+  header { max-width: 49rem; margin-bottom: 3rem; }
+  h1, h2 { font-family: var(--font-display); letter-spacing: -0.07em; line-height: 0.86; }
+  h1 { margin: 0.5rem 0 1rem; font-size: clamp(3rem, 7vw, 5.7rem); }
+  h2 { margin: 0.3rem 0 1.5rem; font-size: clamp(2rem, 5vw, 3.5rem); }
+  header > p:not(.eyebrow) { color: var(--muted); font-size: 1.1rem; }
+  .principles { margin-top: 2rem; padding-top: 2.5rem; }
+  ol { display: grid; gap: 1rem; margin: 0; padding: 0; list-style: none; counter-reset: principles; }
+  li { counter-increment: principles; color: var(--muted); display: grid; gap: 0.8rem; grid-template-columns: 2rem 1fr; }
+  li::before { color: var(--signal); content: "0" counter(principles); font-family: var(--font-mono); }
+</style>

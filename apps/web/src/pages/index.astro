@@ -1,0 +1,81 @@
+---
+import { getCollection } from "astro:content";
+
+import CapabilitySection from "../components/CapabilitySection";
+import HomelabPreview from "../components/HomelabPreview.astro";
+import IdentityMasthead from "../components/IdentityMasthead.astro";
+import MustListenCard from "../components/MustListenCard.astro";
+import ProjectGrid from "../components/ProjectGrid.astro";
+import RightNowCollection from "../components/RightNowCollection.astro";
+import SignalMast from "../components/SignalMast.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { homelabStory, mustListen, publicFocus, rightNowItems, siteIdentity } from "../data/site";
+
+const projects = (await getCollection("projects", ({ data }) => data.visible))
+  .sort((left, right) => left.data.order - right.data.order)
+  .slice(0, 4);
+const enableLiveCapabilities = import.meta.env.PUBLIC_ENABLE_LIVE_CAPABILITIES === "true";
+---
+
+<BaseLayout title="Satyajit Roy — field record" description={siteIdentity.thesis}>
+  <div class="frame field-layout">
+    <SignalMast enabledSources={["curated", "github"]} />
+    <div class="content-field">
+      <IdentityMasthead {...siteIdentity} />
+
+      <section class="feature-grid section-rule" aria-label="Featured links">
+        <MustListenCard {...mustListen} />
+        <RightNowCollection items={rightNowItems} />
+      </section>
+
+      <section class="focus-strip section-rule" aria-labelledby="focus-title">
+        <div>
+          <p class="section-label">Current focus</p>
+          <h2 id="focus-title">Engineering choices that outlast the demo.</h2>
+        </div>
+        <ul>
+          {publicFocus.map((focus) => <li>{focus}</li>)}
+        </ul>
+      </section>
+
+      <section class="home-section section-rule" aria-labelledby="projects-title">
+        <div class="home-section__heading">
+          <div>
+            <p class="section-label">Selected work</p>
+            <h2 id="projects-title">Projects with an audit trail.</h2>
+          </div>
+          <a href="/projects">All projects</a>
+        </div>
+        <ProjectGrid projects={projects} compact={projects.length === 1} />
+      </section>
+
+      {enableLiveCapabilities && <CapabilitySection client:visible />}
+
+      <div class="home-section section-rule">
+        <HomelabPreview {...homelabStory} />
+      </div>
+
+      {siteIdentity.newsletterEnabled && <section class="newsletter-block section-rule" aria-labelledby="newsletter-title">
+        <div>
+          <p class="section-label">Low-noise dispatch</p>
+          <h2 id="newsletter-title">Occasional notes. No tracking pixels.</h2>
+          <p>Subscriptions use confirmation email and stay inside the self-hosted newsletter boundary.</p>
+        </div>
+      </section>}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .feature-grid { display: grid; gap: 1.5rem; padding-block: 2rem; }
+  .focus-strip, .home-section, .newsletter-block { padding-block: clamp(2.5rem, 6vw, 5rem); }
+  .focus-strip { display: grid; gap: 1.5rem; }
+  h2 { margin: 0.2rem 0 0; font-family: var(--font-display); font-size: clamp(2rem, 4.5vw, 3.5rem); letter-spacing: -0.06em; line-height: 0.92; }
+  .focus-strip ul { display: grid; gap: 0.75rem; margin: 0; padding: 0; list-style: none; color: var(--muted); }
+  .focus-strip li { border-left: 2px solid var(--mast-line); padding-left: 0.8rem; }
+  .home-section__heading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; }
+  .home-section__heading > a { flex-shrink: 0; }
+  .newsletter-block { display: grid; gap: 1.5rem; }
+  .newsletter-block > div > p:not(.section-label) { max-width: 38rem; color: var(--muted); }
+  @media (min-width: 760px) { .feature-grid { grid-template-columns: minmax(15rem, 0.75fr) minmax(0, 1.25fr); } .focus-strip, .newsletter-block { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 3rem; } }
+</style>

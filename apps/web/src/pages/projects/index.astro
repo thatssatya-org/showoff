@@ -1,0 +1,32 @@
+---
+import { getCollection } from "astro:content";
+
+import ProjectGrid from "../../components/ProjectGrid.astro";
+import SignalMast from "../../components/SignalMast.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const projects = (await getCollection("projects", ({ data }) => data.visible))
+  .sort((left, right) => left.data.order - right.data.order);
+---
+
+<BaseLayout title="Projects — Satyajit Roy" description="Selected engineering work with owner-approved context.">
+  <div class="frame field-layout">
+    <SignalMast enabledSources={["curated", "github"]} />
+    <div class="content-field projects-page">
+      <header>
+        <p class="eyebrow">Selected work</p>
+        <h1>Projects with enough context to be useful.</h1>
+        <p>Manual project framing wins over repository popularity. Only owner-approved case studies are published.</p>
+      </header>
+      {projects.length > 0 ? <ProjectGrid projects={projects} /> : <p class="empty-state">No projects are published yet.</p>}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .projects-page { padding-block: clamp(2.5rem, 7vw, 6rem); }
+  header { max-width: 45rem; margin-bottom: 2.5rem; }
+  h1 { margin: 0.5rem 0 1rem; font-family: var(--font-display); font-size: clamp(2.8rem, 7vw, 5.5rem); letter-spacing: -0.07em; line-height: 0.86; }
+  header > p:not(.eyebrow) { margin: 0; color: var(--muted); font-size: 1.05rem; }
+  .empty-state { color: var(--muted); }
+</style>

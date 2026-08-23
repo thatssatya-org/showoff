@@ -1,0 +1,39 @@
+---
+import SignalMast from "../components/SignalMast.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { usesEntries } from "../data/site";
+---
+
+<BaseLayout title="Uses — Satyajit Roy" description="Owner-approved tools and principles.">
+  <div class="frame field-layout">
+    <SignalMast enabledSources={["curated", "systems"]} />
+    <div class="content-field uses-page">
+      <header>
+        <p class="eyebrow">Uses</p>
+        <h1>Only the parts worth publishing.</h1>
+        <p>This is a concise, owner-curated snapshot—not a fingerprint of private infrastructure.</p>
+      </header>
+      <div class="uses-list">
+        {usesEntries.map((entry) => (
+          <section class="use-entry section-rule" aria-labelledby={`uses-${entry.category.toLowerCase().replaceAll(" ", "-")}`}>
+            <h2 id={`uses-${entry.category.toLowerCase().replaceAll(" ", "-")}`}>{entry.category}</h2>
+            <ul>{entry.items.map((item) => <li>{item}</li>)}</ul>
+          </section>
+        ))}
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .uses-page { padding-block: clamp(2.5rem, 7vw, 6rem); }
+  header { max-width: 45rem; margin-bottom: 3rem; }
+  h1, h2 { font-family: var(--font-display); letter-spacing: -0.06em; }
+  h1 { margin: 0.5rem 0 1rem; font-size: clamp(3rem, 7vw, 5.6rem); line-height: 0.84; }
+  header > p:not(.eyebrow) { color: var(--muted); }
+  .use-entry { display: grid; gap: 1rem; padding-block: 1.5rem; }
+  h2 { margin: 0; font-size: clamp(1.5rem, 3vw, 2rem); }
+  ul { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0; padding: 0; list-style: none; }
+  li { border: 1px solid var(--line); border-radius: 999px; padding: 0.3rem 0.6rem; color: var(--muted); font-size: 0.9rem; }
+  @media (min-width: 700px) { .use-entry { grid-template-columns: minmax(12rem, 0.35fr) 1fr; } }
+</style>
