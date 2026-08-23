@@ -114,7 +114,7 @@ services:
       api:
         condition: service_started
     ports:
-      - "127.0.0.1:${PORTFOLIO_WEB_PORT:-4321}:8080"
+      - "${PORTFOLIO_WEB_BIND_ADDRESS:-0.0.0.0}:${PORTFOLIO_WEB_PORT:-4321}:8080"
     networks:
       - portfolio-edge
     read_only: true
