@@ -15,27 +15,54 @@ import java.util.Map;
 @Component
 @ConditionalOnProperty(prefix = "portfolio.github-token", name = "enabled", havingValue = "true")
 public class TailnetManagementAccess {
+    public static final String CANONICAL_CLIENT_ADDRESS_HEADER = "X-Portfolio-Client-Address";
+
+    private final List<CidrRange> trustedProxyRanges;
     private final List<CidrRange> tailnetRanges;
 
     public TailnetManagementAccess(GitHubTokenProperties properties) {
+        this.trustedProxyRanges = properties.trustedProxyCidrs().stream().map(CidrRange::parse).toList();
         this.tailnetRanges = properties.tailnetCidrs().stream().map(CidrRange::parse).toList();
     }
 
     public ManagementAuthorizationRequest authorize(HttpServletRequest request) {
-        var remoteAddress = request.getRemoteAddr();
-        if (!isTailnetAddress(remoteAddress)) {
+        if (!isTrustedProxyAddress(request.getRemoteAddr())) {
             throw new ManagementAccessDeniedException();
         }
-        return new ManagementAuthorizationRequest("tailnet:" + remoteAddress,
+        var clientAddress = canonicalClientAddress(request.getHeader(CANONICAL_CLIENT_ADDRESS_HEADER));
+        if (clientAddress == null || !isTailnetAddress(clientAddress)) {
+            throw new ManagementAccessDeniedException();
+        }
+        return new ManagementAuthorizationRequest("tailnet:" + clientAddress,
                 GitHubTokenManagementConfiguration.GITHUB_TOKEN_WRITE_OPERATION, Map.of());
     }
 
+    private boolean isTrustedProxyAddress(String remoteAddress) {
+        return isInRange(remoteAddress, trustedProxyRanges);
+    }
+
     private boolean isTailnetAddress(String remoteAddress) {
+        return isInRange(remoteAddress, tailnetRanges);
+    }
+
+    private static boolean isInRange(String remoteAddress, List<CidrRange> ranges) {
         try {
             var address = InetAddress.getByName(remoteAddress).getAddress();
-            return tailnetRanges.stream().anyMatch(range -> range.contains(address));
+            return ranges.stream().anyMatch(range -> range.contains(address));
         } catch (UnknownHostException exception) {
             return false;
+        }
+    }
+
+    private static String canonicalClientAddress(String value) {
+        if (value == null || value.isBlank()
+                || !(value.matches("[0-9]{1,3}(\\.[0-9]{1,3}){3}") || value.matches("[0-9A-Fa-f:]+"))) {
+            return null;
+        }
+        try {
+            return InetAddress.getByName(value).getHostAddress();
+        } catch (UnknownHostException exception) {
+            return null;
         }
     }
 

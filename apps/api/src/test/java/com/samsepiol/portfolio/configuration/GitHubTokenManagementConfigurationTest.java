@@ -24,7 +24,8 @@ class GitHubTokenManagementConfigurationTest {
     void encryptsAndUsesThePatOnlyThroughTheSnapshotLibraryService() {
         var configuration = new GitHubTokenManagementConfiguration();
         var properties = new GitHubTokenProperties("github-token-v1",
-                Base64.getEncoder().encodeToString(new byte[32]), List.of("100.64.0.0/10"));
+                Base64.getEncoder().encodeToString(new byte[32]), List.of("172.30.0.0/24"),
+                List.of("100.64.0.0/10"));
         var repository = mock(TokenRepository.class);
         var record = ArgumentCaptor.forClass(TokenRecord.class);
         when(repository.upsert(record.capture())).thenAnswer(invocation -> invocation.getArgument(0));
