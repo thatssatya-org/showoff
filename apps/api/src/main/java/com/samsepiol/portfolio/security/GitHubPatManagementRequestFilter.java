@@ -42,14 +42,14 @@ public class GitHubPatManagementRequestFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        if (request.getContentLengthLong() > MAX_BODY_BYTES) {
-            reject(response, HttpStatus.PAYLOAD_TOO_LARGE);
-            return;
-        }
         try {
             tailnetManagementAccess.authorize(request);
         } catch (ManagementAccessDeniedException exception) {
             reject(response, HttpStatus.FORBIDDEN);
+            return;
+        }
+        if (request.getContentLengthLong() > MAX_BODY_BYTES) {
+            reject(response, HttpStatus.PAYLOAD_TOO_LARGE);
             return;
         }
         var body = request.getInputStream().readNBytes(MAX_BODY_BYTES + 1);

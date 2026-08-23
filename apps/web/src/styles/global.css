@@ -274,6 +274,77 @@ button {
   color: var(--accent);
 }
 
+.operator-connection {
+  display: grid;
+  gap: 2rem;
+  margin-top: 2rem;
+  padding: clamp(1.25rem, 4vw, 2.5rem);
+}
+
+.operator-connection h1 {
+  margin: 0.35rem 0 1rem;
+  font-family: var(--font-display);
+  font-size: clamp(2.2rem, 7vw, 4.6rem);
+  letter-spacing: -0.07em;
+  line-height: 0.9;
+}
+
+.operator-connection__heading > p:not(.section-label),
+.operator-connection__notice,
+.operator-connection__future p:not(.section-label) {
+  color: var(--muted);
+}
+
+.operator-connection__form {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.operator-connection__form > label:first-child {
+  font-weight: 600;
+}
+
+.operator-connection__form input[type="password"] {
+  min-height: 3rem;
+  border: 1px solid var(--line);
+  border-radius: 0.35rem;
+  background: var(--canvas);
+  color: var(--ink);
+  padding: 0.55rem 0.75rem;
+}
+
+.operator-connection__notice,
+.operator-connection__status,
+.operator-connection__error {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.operator-connection__confirm {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.operator-connection__confirm input { margin-top: 0.24rem; accent-color: var(--signal); }
+
+.operator-connection button {
+  justify-self: start;
+  min-height: 2.9rem;
+  border: 1px solid var(--signal);
+  border-radius: 0.35rem;
+  background: var(--signal);
+  color: #101319;
+  font-weight: 700;
+  padding: 0.5rem 0.9rem;
+}
+
+.operator-connection button:disabled { cursor: not-allowed; opacity: 0.55; }
+.operator-connection__error { color: var(--accent); }
+.operator-connection__future { border-top: 1px solid var(--line); padding-top: 1rem; }
+
 @keyframes source-reveal {
   from {
     opacity: 0.72;

@@ -1,0 +1,16 @@
+---
+import GitHubConnectionSetup from "../../components/GitHubConnectionSetup";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="GitHub connection — operator setup" description="Private Tailnet-only GitHub sync setup." noIndex>
+  <div class="frame operator-page">
+    <a class="operator-page__back" href="/">Return to public field record</a>
+    <GitHubConnectionSetup client:load />
+  </div>
+</BaseLayout>
+
+<style>
+  .operator-page { max-width: 48rem; padding-block: clamp(2rem, 8vw, 6rem); }
+  .operator-page__back { color: var(--muted); font-family: var(--font-mono); font-size: 0.78rem; }
+</style>

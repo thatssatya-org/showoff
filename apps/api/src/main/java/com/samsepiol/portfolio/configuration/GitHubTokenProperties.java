@@ -13,9 +13,11 @@ import java.util.List;
 public record GitHubTokenProperties(
         @NotBlank String keyId,
         @NotBlank String keyBase64,
+        @NotEmpty List<@NotBlank String> trustedProxyCidrs,
         @NotEmpty List<@NotBlank String> tailnetCidrs) {
 
     public GitHubTokenProperties {
+        trustedProxyCidrs = List.copyOf(trustedProxyCidrs);
         tailnetCidrs = List.copyOf(tailnetCidrs);
     }
 }
