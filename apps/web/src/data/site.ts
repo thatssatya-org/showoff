@@ -74,7 +74,7 @@ export const rightNowItems = [
     presentation: "photo-carousel",
     photos: [
       {
-        src: "https://lh3.googleusercontent.com/pw/AP1GczPYYy0UnPuDdaSoFK7F2skoVd4mEDqa6prGRA3b-r7IxUIIx_CTgAi41ArW2IxhCKCS7NGMVkfBbWXKlfhcx0uxn_DpzW-Tc98guUzRB8h4QH=w1600-h900",
+        src: "https://lh3.googleusercontent.com/pw/AP1GczPYYy0UnPuDdaSoFK7F2skoVd4mEDqa6prGRA3b-r7IxUIIx_CTgAi41ArW2IxhCKCS7NGMVkfBbWXKlfhcx0uxn_DpzW-Tc98guUzRB8h4QHkcJy7B=w1600-h900",
         alt: "Aero India exhibition entrance signage"
       },
       {

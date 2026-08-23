@@ -69,5 +69,12 @@ const { items } = Astro.props;
   .right-now__slide:hover img { transform: scale(1.025); }
   .right-now__carousel-hint { margin-top: 0.15rem !important; color: var(--muted); font-family: var(--font-mono); font-size: 0.68rem !important; }
   .right-now__carousel-hint a { color: var(--ink); }
-  @media (min-width: 720px) { .right-now__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .right-now__item--spotify-player { grid-column: span 2; } }
+  @media (min-width: 720px) {
+    .right-now {
+      padding-block: 1.25rem 0;
+    }
+
+    .right-now__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .right-now__item--spotify-player { grid-column: span 2; }
+  }
 </style>
