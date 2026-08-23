@@ -26,7 +26,7 @@ public class PublicCapabilitySnapshot {
     @NonNull
     Instant refreshedAt;
     @NonNull
-    Map<String, String> content;
+    Map<String, Object> content;
 
     @Builder
     public PublicCapabilitySnapshot(
@@ -35,7 +35,7 @@ public class PublicCapabilitySnapshot {
             @NonNull String title,
             @NonNull String sourceLabel,
             @NonNull Instant refreshedAt,
-            @NonNull Map<String, String> content) {
+            @NonNull Map<String, Object> content) {
         this.capability = capability;
         this.state = state;
         this.title = title;

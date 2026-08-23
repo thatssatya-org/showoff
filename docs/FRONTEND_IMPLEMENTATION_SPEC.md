@@ -151,6 +151,8 @@ Unknown component types are ignored with a development-only diagnostic. They mus
 | `NewsletterForm` | consent copy/version | progressive validation, accessible errors, no PII echo/logging |
 | `SourceMetadata` | provider label, refreshed timestamp, stale flag | compact `IBM Plex Mono` utility treatment |
 
+For `GITHUB_ACTIVITY`, render every backend-returned allow-listed field: eight newest-first public events, anonymous contribution total/calendar, and the Easy Fintrack public repository record. Do not derive counts, call GitHub from the browser, or render fields not returned by the capability payload. Missing optional repository fields stay absent without placeholder chrome.
+
 All images use Astro image optimisation or generated responsive variants, width/height to prevent layout shift, `loading="lazy"` except relevant hero media, and decorative images only with empty alt.
 
 ## 5. API, form, and failure behaviour

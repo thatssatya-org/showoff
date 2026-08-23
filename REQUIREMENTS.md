@@ -2,7 +2,7 @@
 
 **Owner:** Satyajit Roy (`thatssatya`)
 **Status:** Final implementation baseline
-**Last finalised:** 2026-08-23 (link hub screenshot and platform contracts reviewed)
+**Last finalised:** 2026-08-24 (GitHub projection contract and local verification reviewed)
 **Scope:** A public personal portfolio with a static-first frontend and a Java backend that safely aggregates selected external activity.
 
 ## 1. Executive decision
@@ -330,10 +330,10 @@ Every collection has an explicit ID prefix, a schema version, retention policy, 
 - [x] Homelab v1 disclosure is approved: publish only the approved title, narrative, service categories, and operating principles. Publish no metrics, diagram, identifiers, topology, live state, or operational detail in v1.
 - [x] Featured project content is approved: publish File Nexus as the data-ingestion and transformation platform, and Easy Fintrack as its statement-to-ledger dashboard companion. File Nexus uses the owner-approved repository URL; its availability must be checked before presenting it as a public source record.
 - [x] Initial dynamic-integration scope is GitHub only. Spotify, Instagram, LinkedIn, and YouTube remain curated/manual links until separately approved.
-- [x] GitHub presentation scope is approved: profile `thatssatya`; eight-event public-only timeline with newest/oldest sorting; public Easy Fintrack enrichment; and a GitHub-style anonymous private-contribution heat map/total. File Nexus stays owner-authored despite its approved repository link.
+- [x] GitHub presentation scope is approved: profile `thatssatya`; exactly eight newest-first public events; a GitHub-style anonymous private-contribution heat map and total; and Easy Fintrack’s public repository URL, stars, primary language, topics, last-updated timestamp, and description. The backend owns the complete allow-listed projection and the frontend renders only fields returned by that contract. File Nexus stays owner-authored despite its approved repository link.
 - [x] GitHub authentication uses a fine-grained PAT stored only as a versioned encrypted MongoDB envelope. It is supplied through a Tailnet-restricted write-only management `POST` and is decrypted only by the internal GitHub sync path.
 - [x] Newsletter is deferred. Hide subscription controls and collect no email addresses until the owner approves a public sender domain and self-hosted delivery configuration.
-- [ ] Approve a public mail domain and sender identity before enabling the newsletter.
+- [ ] Deferred to the final phase: approve a public mail domain, sender identity, and self-hosted delivery configuration before enabling the newsletter. Until DNS is ready, subscription controls remain hidden and no email is collected.
 
 ### Phase 1 — static portfolio foundation
 
@@ -359,7 +359,7 @@ Rate-limit parsing, retry policy, quota persistence, and rate-limit-aware schedu
 - [x] Private Tailnet-only GitHub PAT setup surface, encrypted library-backed storage, and no-read credential boundary.
 - [x] Local HTTP snapshot integration with disabled-by-default redacted diagnostics, bounded responses, ETag persistence, conditional requests, `304` no-write handling, and last-known-good public-event snapshots.
 - [x] Local Compose deployment verified with the API and web gateway healthy; GitHub refresh remains disabled until operator credentials and explicit profile approval are configured.
-- [ ] GraphQL contribution calendar/total and Easy Fintrack enrichment after their public projections are reviewed.
+- [x] GraphQL contribution calendar/total and Easy Fintrack enrichment: public projections approved and implemented as backend-owned, allow-listed capability content.
 - [ ] Rate-limit parsing, quota persistence, retry policy, and rate-limit-aware scheduling in the dedicated shared-library rate-limit module.
 - [ ] Replace local snapshot dependencies with released BOM-governed artifacts before promotion.
 

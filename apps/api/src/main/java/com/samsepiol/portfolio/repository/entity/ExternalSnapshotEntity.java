@@ -48,7 +48,7 @@ public final class ExternalSnapshotEntity extends Entity {
     Instant validUntil;
     @NonNull
     @BsonProperty("content")
-    Map<String, String> content;
+    Map<String, Object> content;
     @BsonProperty("publicApproved")
     boolean publicApproved;
     @BsonProperty("profileEnabled")
@@ -65,7 +65,7 @@ public final class ExternalSnapshotEntity extends Entity {
             @NonNull @BsonProperty("sourceLabel") String sourceLabel,
             @NonNull @BsonProperty("refreshedAt") Instant refreshedAt,
             @NonNull @BsonProperty("validUntil") Instant validUntil,
-            @NonNull @BsonProperty("content") Map<String, String> content,
+            @NonNull @BsonProperty("content") Map<String, Object> content,
             @BsonProperty("publicApproved") boolean publicApproved,
             @BsonProperty("profileEnabled") boolean profileEnabled,
             @BsonProperty("providerEtag") String providerEtag) {

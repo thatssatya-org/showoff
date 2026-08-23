@@ -12,5 +12,7 @@ public record GitHubRefreshProperties(
         boolean publicApproved,
         @NotBlank String profileId,
         @NotBlank @Pattern(regexp = "[A-Za-z0-9-]{1,39}") String handle,
+        @NotBlank @Pattern(regexp = "[A-Za-z0-9-]{1,39}") String repositoryOwner,
+        @NotBlank @Pattern(regexp = "[A-Za-z0-9_.-]{1,100}") String repositoryName,
         @NotBlank String cron) {
 }

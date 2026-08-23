@@ -19,6 +19,8 @@ import java.util.Map;
 public class GitHubRefreshConfiguration {
     public static final String SERVICE = "github";
     public static final String PUBLIC_EVENTS = "public-events";
+    public static final String CONTRIBUTIONS = "contributions";
+    public static final String REPOSITORY = "repository";
 
     @Bean
     HttpConfigService gitHubHttpConfigService(GitHubRefreshProperties properties) {
@@ -32,15 +34,27 @@ public class GitHubRefreshConfiguration {
 
     private static HttpConfig.ServiceConfig gitHubServiceConfig(GitHubRefreshProperties properties) {
         var service = new HttpConfig.ServiceConfig();
-        service.setBaseUrl("api.github.com/users/" + properties.handle());
+        service.setBaseUrl("api.github.com");
         service.setSecured(true);
         var publicEvents = new HttpConfig.ServiceConfig.ApiConfig();
         publicEvents.setMethod(HttpMethod.GET);
-        publicEvents.setPath("/events/public?per_page=8");
+        publicEvents.setPath("/users/" + properties.handle() + "/events/public?per_page=8");
         publicEvents.setRequestLoggingEnabled(false);
         publicEvents.setResponseLoggingEnabled(false);
         publicEvents.setMaxResponseBodyBytes(262_144);
-        service.setApiConfigs(Map.of(PUBLIC_EVENTS, publicEvents));
+        var contributions = new HttpConfig.ServiceConfig.ApiConfig();
+        contributions.setMethod(HttpMethod.POST);
+        contributions.setPath("/graphql");
+        contributions.setRequestLoggingEnabled(false);
+        contributions.setResponseLoggingEnabled(false);
+        contributions.setMaxResponseBodyBytes(262_144);
+        var repository = new HttpConfig.ServiceConfig.ApiConfig();
+        repository.setMethod(HttpMethod.GET);
+        repository.setPath("/repos/" + properties.repositoryOwner() + "/" + properties.repositoryName());
+        repository.setRequestLoggingEnabled(false);
+        repository.setResponseLoggingEnabled(false);
+        repository.setMaxResponseBodyBytes(262_144);
+        service.setApiConfigs(Map.of(PUBLIC_EVENTS, publicEvents, CONTRIBUTIONS, contributions, REPOSITORY, repository));
         return service;
     }
 }

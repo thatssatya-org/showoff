@@ -86,18 +86,33 @@ public final class GitHubActivitySnapshotStrategy implements CapabilitySnapshotS
         existing.map(ExternalSnapshotEntity::getProviderEtag).filter(value -> !value.isBlank())
                 .ifPresent(value -> headers.put("If-None-Match", value));
         try {
-            var response = httpClient.executeWithResponse(ApiRequest.builder()
+            var eventsResponse = httpClient.executeWithResponse(ApiRequest.builder()
                     .service(GitHubRefreshConfiguration.SERVICE)
                     .api(GitHubRefreshConfiguration.PUBLIC_EVENTS)
                     .headers(Map.copyOf(headers))
-                    .build());
-            if (response.getStatusCode() == 304) {
-                return existing.map(this::toPublicSnapshot).orElseGet(this::emptySnapshot);
+                    .build(), String.class);
+            var events = eventsResponse.getStatusCode() == 304
+                    ? existing.map(snapshot -> snapshot.getContent().get("events")).orElse(null)
+                    : publicEvents(eventsResponse.getBody());
+            if (events == null || !eventsResponse.isSuccessful() && eventsResponse.getStatusCode() != 304) {
+                throw new IllegalStateException("GitHub events returned an unsuccessful response");
             }
-            if (!response.isSuccessful()) {
-                throw new IllegalStateException("GitHub returned an unsuccessful response");
+            var contributionsResponse = httpClient.executeWithResponse(ApiRequest.builder()
+                    .service(GitHubRefreshConfiguration.SERVICE)
+                    .api(GitHubRefreshConfiguration.CONTRIBUTIONS)
+                    .headers(graphQlHeaders(token))
+                    .body(Map.of("query", "query { viewer { contributionsCollection { contributionCalendar { totalContributions weeks { contributionDays { date contributionCount } } } } } }"))
+                    .build(), JsonNode.class);
+            var repositoryResponse = httpClient.executeWithResponse(ApiRequest.builder()
+                    .service(GitHubRefreshConfiguration.SERVICE)
+                    .api(GitHubRefreshConfiguration.REPOSITORY)
+                    .headers(Map.copyOf(headers))
+                    .build(), String.class);
+            if (!contributionsResponse.isSuccessful() || !repositoryResponse.isSuccessful()) {
+                throw new IllegalStateException("GitHub public projection returned an unsuccessful response");
             }
-            var replacement = toEntity(response.getBody(), response.firstHeader("etag").orElse(null));
+            var replacement = toEntity(events, contributionCalendar(contributionsResponse.getBody()),
+                    repository(repositoryResponse.getBody()), eventsResponse.firstHeader("etag").orElse(null));
             snapshotRepository.replace(replacement);
             return toPublicSnapshot(replacement);
         } catch (RuntimeException exception) {
@@ -106,7 +121,16 @@ public final class GitHubActivitySnapshotStrategy implements CapabilitySnapshotS
         return existing.map(this::toPublicSnapshot).orElseGet(this::emptySnapshot);
     }
 
-    private ExternalSnapshotEntity toEntity(String body, String etag) {
+    private Map<String, String> graphQlHeaders(char[] token) {
+        var headers = new LinkedHashMap<String, String>();
+        headers.put(HttpConstants.Headers.AUTHORIZATION, "Bearer " + new String(token));
+        headers.put("Accept", "application/vnd.github+json");
+        headers.put("User-Agent", "showoff-github-refresh");
+        return Map.copyOf(headers);
+    }
+
+    private ExternalSnapshotEntity toEntity(Object events, Map<String, Object> contributions,
+                                            Map<String, Object> repository, String etag) {
         var now = Instant.now();
         return ExternalSnapshotEntity.builder()
                 .capability(CapabilityType.GITHUB_ACTIVITY)
@@ -116,20 +140,20 @@ public final class GitHubActivitySnapshotStrategy implements CapabilitySnapshotS
                 .sourceLabel("GitHub")
                 .refreshedAt(now)
                 .validUntil(now.plusSeconds(900))
-                .content(Map.of("events", serializePublicEvents(body)))
+                .content(Map.of("events", events, "contributions", contributions, "repositories", List.of(repository)))
                 .publicApproved(refreshProperties.publicApproved())
                 .profileEnabled(true)
                 .providerEtag(etag)
                 .build();
     }
 
-    private String serializePublicEvents(String body) {
+    private List<Map<String, String>> publicEvents(String body) {
         try {
             var root = objectMapper.readTree(body);
             if (!root.isArray()) {
                 throw new IllegalArgumentException("GitHub events response must be an array");
             }
-            var events = new ArrayList<GitHubPublicEvent>();
+            var events = new ArrayList<Map<String, String>>();
             for (JsonNode node : root) {
                 if (events.size() == MAX_EVENTS) {
                     break;
@@ -139,12 +163,58 @@ public final class GitHubActivitySnapshotStrategy implements CapabilitySnapshotS
                 var createdAt = node.path("created_at").asText();
                 if (!type.isBlank() && !repository.isBlank() && !createdAt.isBlank()) {
                     var day = Instant.parse(createdAt).atZone(ZoneOffset.UTC).toLocalDate().toString();
-                    events.add(GitHubPublicEvent.builder().type(type).repository(repository).day(day).build());
+                    events.add(Map.of("type", type, "repository", repository, "day", day));
                 }
             }
-            return objectMapper.writeValueAsString(List.copyOf(events));
+            return List.copyOf(events);
         } catch (Exception exception) {
             throw new IllegalArgumentException("GitHub events response cannot be mapped to the public schema", exception);
+        }
+    }
+
+    private Map<String, Object> contributionCalendar(JsonNode response) {
+        var calendar = response.path("data").path("viewer").path("contributionsCollection").path("contributionCalendar");
+        if (calendar.isMissingNode() || !calendar.path("totalContributions").canConvertToInt()) {
+            throw new IllegalArgumentException("GitHub contribution calendar cannot be mapped to the public schema");
+        }
+        var days = new ArrayList<Map<String, Object>>();
+        for (JsonNode week : calendar.path("weeks")) {
+            for (JsonNode day : week.path("contributionDays")) {
+                var date = day.path("date").asText();
+                if (date.isBlank() || !day.path("contributionCount").canConvertToInt()) {
+                    throw new IllegalArgumentException("GitHub contribution day cannot be mapped to the public schema");
+                }
+                days.add(Map.of("date", date, "count", day.path("contributionCount").asInt()));
+            }
+        }
+        return Map.of("total", calendar.path("totalContributions").asInt(), "days", List.copyOf(days));
+    }
+
+    private Map<String, Object> repository(String body) {
+        try {
+            var root = objectMapper.readTree(body);
+            var name = root.path("name").asText();
+            var url = root.path("html_url").asText();
+            if (name.isBlank() || url.isBlank() || !root.path("stargazers_count").canConvertToInt()) {
+                throw new IllegalArgumentException("GitHub repository cannot be mapped to the public schema");
+            }
+            var topics = new ArrayList<String>();
+            for (JsonNode topic : root.path("topics")) {
+                if (topic.isTextual() && !topic.asText().isBlank()) {
+                    topics.add(topic.asText());
+                }
+            }
+            var result = new LinkedHashMap<String, Object>();
+            result.put("name", name);
+            result.put("url", url);
+            result.put("stars", root.path("stargazers_count").asInt());
+            result.put("topics", List.copyOf(topics));
+            if (root.path("language").isTextual()) result.put("primaryLanguage", root.path("language").asText());
+            if (root.path("updated_at").isTextual()) result.put("updatedAt", root.path("updated_at").asText());
+            if (root.path("description").isTextual()) result.put("description", root.path("description").asText());
+            return Map.copyOf(result);
+        } catch (Exception exception) {
+            throw new IllegalArgumentException("GitHub repository cannot be mapped to the public schema", exception);
         }
     }
 

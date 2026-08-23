@@ -121,18 +121,18 @@ The reverse proxy rejects non-Tailnet clients for both the setup page and the wr
 
 ### 3.5 GitHub refresh adapter
 
-The scheduled GitHub adapter is an out-of-band capability strategy: projected enabled profile read; callback-only `TokenManagementService.useForInternalIntegration(...)`; an allow-listed `api.github.com` REST v3 public-events endpoint; conditional ETag requests; atomic replacement of a public-safe snapshot; and last-known-good preservation on any upstream fault. It never runs from a visitor request. The initial safe increment fetches only the eight public events and persists only event type, UTC calendar day, and public repository name. It never persists payload content, commit messages, private repository metadata, or a provider token.
+The scheduled GitHub adapter is an out-of-band capability strategy: projected enabled profile read; callback-only `TokenManagementService.useForInternalIntegration(...)`; allow-listed GitHub REST v3 and GraphQL endpoints; conditional event ETag requests; atomic replacement of a public-safe snapshot; and last-known-good preservation on any upstream fault. It never runs from a visitor request. Its public `GITHUB_ACTIVITY` content is a backend-owned, closed projection containing exactly: eight newest-first public events (`type`, UTC `day`, public `repository`); anonymous contribution `total` and calendar `days` (`date`, `count`); and the configured Easy Fintrack repository’s `name`, public `url`, `stars`, optional `primaryLanguage`, `topics`, optional `updatedAt`, and optional `description`. It never persists payload content, commit messages, private repository/event metadata, GraphQL node IDs, or a provider token. The frontend must render only this returned projection and must not infer or fetch additional GitHub data.
 
 The installed local `http:0.0.4-LIBRARY-SNAPSHOT` exposes a redacting `HttpResponseEnvelope` with status, normalized headers, and a bounded single-consumption body. HTTP diagnostics are API-level opt-in and disabled by default; credential headers are omitted, common JSON secrets are redacted, and payload diagnostics are truncated. The GitHub adapter sends `If-None-Match`, stores `ETag`, accepts `304` without replacing the snapshot, and does not bypass the shared HTTP client with `WebClient`, a vendor SDK, or a direct HTTP client.
 
-Rate-limit parsing, quota persistence, retries, and rate-limit-aware scheduling are intentionally deferred to a separate shared-library rate-limit module. They are absent from this HTTP client and Showoff must not add an app-side substitute. GraphQL contribution-calendar/total and Easy Fintrack enrichment remain later adapter increments after their public projection contracts are individually reviewed.
+Rate-limit parsing, quota persistence, retries, and rate-limit-aware scheduling are intentionally deferred to a separate shared-library rate-limit module. They are absent from this HTTP client and Showoff must not add an app-side substitute.
 
-**Implementation status (2026-08-23):** the local snapshot implementation now provides the Tailnet-only write boundary
-and a disabled-by-default scheduled public-events refresh with projected reads, ETag persistence, conditional
-`If-None-Match` requests, `304` no-write handling, and last-known-good preservation. It has been locally Compose
-deployed with the API and web gateway healthy. The refresh remains disabled until an operator configures the approved
-profile and credential boundary. GraphQL contribution aggregates, Easy Fintrack enrichment, and the dedicated
-rate-limit module are deliberate follow-up work; a promoted image remains blocked on released BOM-managed artifacts.
+**Implementation status (2026-08-24):** the local snapshot implementation provides the Tailnet-only write boundary
+and a disabled-by-default scheduled GitHub refresh with projected reads, conditional `If-None-Match` requests,
+last-known-good preservation, anonymous contribution calendar/total, and the allow-listed Easy Fintrack projection.
+It has been locally Compose deployed with the API and web gateway healthy. The refresh remains disabled until an
+operator configures the approved profile and credential boundary. Rate-limit handling belongs in the dedicated shared
+library module; a promoted image remains blocked on released BOM-managed artifacts.
 
 ## 4. Data model and MongoDB rules
 
