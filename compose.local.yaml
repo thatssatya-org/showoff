@@ -1,4 +1,4 @@
-name: satya-portfolio-local
+name: showoff-local
 
 services:
   mongodb:
@@ -77,7 +77,7 @@ services:
     build:
       context: ./apps/api
       dockerfile: Dockerfile
-    image: satya-portfolio-api:local
+    image: showoff-api:local
     restart: "no"
     mem_limit: 512m
     cpus: 0.75
@@ -89,14 +89,39 @@ services:
       SPRING_DATA_MONGODB_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME:?set MONGO_INITDB_ROOT_USERNAME in the process environment}:${MONGO_INITDB_ROOT_PASSWORD:?set MONGO_INITDB_ROOT_PASSWORD in the process environment}@mongodb:27017/${MONGO_INITDB_DATABASE:-portfolio}?authSource=admin
       PORTFOLIO_PUBLIC_BASE_URL: ${PORTFOLIO_PUBLIC_BASE_URL:?set PORTFOLIO_PUBLIC_BASE_URL in the process environment}
       SERVER_PORT: "8080"
-    ports:
-      - "127.0.0.1:${PORTFOLIO_API_PORT:-8080}:8080"
     networks:
       - portfolio-private
       - portfolio-edge
     read_only: true
     tmpfs:
       - /tmp:mode=1777,noexec,nosuid,size=32m
+    security_opt:
+      - no-new-privileges:true
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+      args:
+        PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-http://127.0.0.1:4321}
+        PUBLIC_ENABLE_LIVE_CAPABILITIES: ${PUBLIC_ENABLE_LIVE_CAPABILITIES:-true}
+    image: showoff-web:local
+    restart: "no"
+    mem_limit: 192m
+    cpus: 0.50
+    pids_limit: 128
+    depends_on:
+      api:
+        condition: service_started
+    ports:
+      - "127.0.0.1:${PORTFOLIO_WEB_PORT:-4321}:8080"
+    networks:
+      - portfolio-edge
+    read_only: true
+    tmpfs:
+      - /tmp:mode=1777,noexec,nosuid,size=16m
+      - /var/cache/nginx:mode=0755,noexec,nosuid,size=16m
+      - /var/run:mode=0755,noexec,nosuid,size=4m
     security_opt:
       - no-new-privileges:true
 
