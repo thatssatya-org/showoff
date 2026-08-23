@@ -115,6 +115,7 @@ services:
       args:
         PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-http://127.0.0.1:4321}
         PUBLIC_ENABLE_LIVE_CAPABILITIES: ${PUBLIC_ENABLE_LIVE_CAPABILITIES:-true}
+        PUBLIC_ENABLE_OPERATOR_GITHUB_SETUP: ${PUBLIC_ENABLE_OPERATOR_GITHUB_SETUP:-true}
     image: showoff-web:local
     restart: "no"
     mem_limit: 192m
