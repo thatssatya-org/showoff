@@ -25,7 +25,8 @@ import java.nio.charset.StandardCharsets;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @ConditionalOnProperty(prefix = "portfolio.github-token", name = "enabled", havingValue = "true")
 public class GitHubPatManagementRequestFilter extends OncePerRequestFilter {
-    private static final String PATH = "/internal/v1/provider-profiles/github/pat";
+    private static final String PAT_PATH = "/internal/v1/provider-profiles/github/pat";
+    private static final String REFRESH_PATH = "/internal/v1/provider-profiles/github/activity/refresh";
     public static final int MAX_BODY_BYTES = 2_048;
 
     private final TailnetManagementAccess tailnetManagementAccess;
@@ -36,7 +37,8 @@ public class GitHubPatManagementRequestFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !"POST".equals(request.getMethod()) || !PATH.equals(request.getRequestURI());
+        return !"POST".equals(request.getMethod())
+                || (!PAT_PATH.equals(request.getRequestURI()) && !REFRESH_PATH.equals(request.getRequestURI()));
     }
 
     @Override
@@ -46,6 +48,10 @@ public class GitHubPatManagementRequestFilter extends OncePerRequestFilter {
             tailnetManagementAccess.authorize(request);
         } catch (ManagementAccessDeniedException exception) {
             reject(response, HttpStatus.FORBIDDEN);
+            return;
+        }
+        if (REFRESH_PATH.equals(request.getRequestURI())) {
+            filterChain.doFilter(request, response);
             return;
         }
         if (request.getContentLengthLong() > MAX_BODY_BYTES) {
