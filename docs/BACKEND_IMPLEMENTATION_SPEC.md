@@ -127,6 +127,13 @@ The installed local `http:0.0.4-LIBRARY-SNAPSHOT` exposes a redacting `HttpRespo
 
 Rate-limit parsing, quota persistence, retries, and rate-limit-aware scheduling are intentionally deferred to a separate shared-library rate-limit module. They are absent from this HTTP client and Showoff must not add an app-side substitute. GraphQL contribution-calendar/total and Easy Fintrack enrichment remain later adapter increments after their public projection contracts are individually reviewed.
 
+**Implementation status (2026-08-23):** the local snapshot implementation now provides the Tailnet-only write boundary
+and a disabled-by-default scheduled public-events refresh with projected reads, ETag persistence, conditional
+`If-None-Match` requests, `304` no-write handling, and last-known-good preservation. It has been locally Compose
+deployed with the API and web gateway healthy. The refresh remains disabled until an operator configures the approved
+profile and credential boundary. GraphQL contribution aggregates, Easy Fintrack enrichment, and the dedicated
+rate-limit module are deliberate follow-up work; a promoted image remains blocked on released BOM-managed artifacts.
+
 ## 4. Data model and MongoDB rules
 
 ### 4.1 Collections

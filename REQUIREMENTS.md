@@ -354,6 +354,15 @@ The locally installed `http:0.0.4-LIBRARY-SNAPSHOT` now exposes `HttpResponseEnv
 
 Rate-limit parsing, retry policy, quota persistence, and rate-limit-aware scheduling are deliberately deferred. They belong in a separate shared-library rate-limit module; this HTTP client and Showoff contain no app-side substitute.
 
+#### GitHub local delivery status — 2026-08-23
+
+- [x] Private Tailnet-only GitHub PAT setup surface, encrypted library-backed storage, and no-read credential boundary.
+- [x] Local HTTP snapshot integration with disabled-by-default redacted diagnostics, bounded responses, ETag persistence, conditional requests, `304` no-write handling, and last-known-good public-event snapshots.
+- [x] Local Compose deployment verified with the API and web gateway healthy; GitHub refresh remains disabled until operator credentials and explicit profile approval are configured.
+- [ ] GraphQL contribution calendar/total and Easy Fintrack enrichment after their public projections are reviewed.
+- [ ] Rate-limit parsing, quota persistence, retry policy, and rate-limit-aware scheduling in the dedicated shared-library rate-limit module.
+- [ ] Replace local snapshot dependencies with released BOM-governed artifacts before promotion.
+
 ### Phase 3 — selected media integrations
 
 1. Add Spotify OAuth and owner-approved On Repeat snapshot.
