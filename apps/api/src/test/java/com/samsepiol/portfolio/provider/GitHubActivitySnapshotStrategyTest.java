@@ -34,7 +34,7 @@ class GitHubActivitySnapshotStrategyTest {
                 List.of("172.30.0.0/24"), List.of("100.64.0.0/10"));
         var existing = ExternalSnapshotEntity.builder().capability(CapabilityType.GITHUB_ACTIVITY).profileId("github-primary")
                 .state(com.samsepiol.portfolio.domain.CapabilityState.HEALTHY).title("Recent public activity")
-                .sourceLabel("GitHub").refreshedAt(java.time.Instant.EPOCH).validUntil(java.time.Instant.EPOCH)
+                .sourceLabel("GitHub").refreshedAtEpochMillis(0L).validUntilEpochMillis(0L)
                 .content(Map.of("events", "[]")).publicApproved(true).profileEnabled(true).providerEtag("\"prior\"").build();
         when(repository.find("github-primary")).thenReturn(existing);
         var response = GitHubActivityFetchResponse.builder().statusCode(200).etag("\"next\"").events(List.of()).build();
@@ -64,7 +64,7 @@ class GitHubActivitySnapshotStrategyTest {
                 List.of("172.30.0.0/24"), List.of("100.64.0.0/10"));
         var existing = ExternalSnapshotEntity.builder().capability(CapabilityType.GITHUB_ACTIVITY).profileId("github-primary")
                 .state(com.samsepiol.portfolio.domain.CapabilityState.HEALTHY).title("Recent public activity")
-                .sourceLabel("GitHub").refreshedAt(java.time.Instant.EPOCH).validUntil(java.time.Instant.EPOCH)
+                .sourceLabel("GitHub").refreshedAtEpochMillis(0L).validUntilEpochMillis(0L)
                 .content(Map.of("events", "[]")).publicApproved(true).profileEnabled(true).providerEtag("\"prior\"").build();
         when(repository.find("github-primary")).thenReturn(existing);
         when(githubServiceClient.fetchPublicEvents(any(), eq("\"prior\"")))

@@ -17,7 +17,7 @@ import static com.mongodb.client.model.Filters.eq;
 @RequiredArgsConstructor
 public class GitHubActivitySnapshotRepository {
     private static final Bson REFRESH_PROJECTION = Projections.fields(Projections.include("capability", "profileId",
-            "state", "title", "sourceLabel", "refreshedAt", "validUntil", "content", "publicApproved",
+            "state", "title", "sourceLabel", "refreshedAtEpochMillis", "validUntilEpochMillis", "content", "publicApproved",
             "profileEnabled", "providerEtag"), Projections.excludeId());
     private final Repository repository;
 

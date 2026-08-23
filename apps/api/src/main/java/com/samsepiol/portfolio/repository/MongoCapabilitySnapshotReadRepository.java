@@ -23,8 +23,8 @@ public class MongoCapabilitySnapshotReadRepository implements CapabilitySnapshot
     static final String COLLECTION = "externalSnapshots";
     private static final int MAX_PUBLIC_SNAPSHOTS = CapabilityType.values().length;
     private static final Bson PUBLIC_SNAPSHOT_PROJECTION = Projections.fields(
-            Projections.include("capability", "profileId", "state", "title", "sourceLabel", "refreshedAt",
-                    "validUntil", "content", "publicApproved", "profileEnabled"),
+            Projections.include("capability", "profileId", "state", "title", "sourceLabel", "refreshedAtEpochMillis",
+                    "validUntilEpochMillis", "content", "publicApproved", "profileEnabled"),
             Projections.excludeId());
 
     private final Repository repository;
@@ -74,7 +74,7 @@ public class MongoCapabilitySnapshotReadRepository implements CapabilitySnapshot
                 .state(entity.getState())
                 .title(entity.getTitle())
                 .sourceLabel(entity.getSourceLabel())
-                .refreshedAt(entity.getRefreshedAt())
+                .refreshedAt(java.time.Instant.ofEpochMilli(entity.getRefreshedAtEpochMillis()))
                 .content(entity.getContent())
                 .build();
     }
