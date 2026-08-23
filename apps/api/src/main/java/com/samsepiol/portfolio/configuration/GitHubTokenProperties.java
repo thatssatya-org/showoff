@@ -2,7 +2,6 @@ package com.samsepiol.portfolio.configuration;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
-import lombok.NonNull;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
@@ -15,9 +14,4 @@ public record GitHubTokenProperties(
         @NotBlank String keyBase64,
         @NotEmpty List<@NotBlank String> trustedProxyCidrs,
         @NotEmpty List<@NotBlank String> tailnetCidrs) {
-
-    public GitHubTokenProperties {
-        trustedProxyCidrs = List.copyOf(trustedProxyCidrs);
-        tailnetCidrs = List.copyOf(tailnetCidrs);
-    }
 }

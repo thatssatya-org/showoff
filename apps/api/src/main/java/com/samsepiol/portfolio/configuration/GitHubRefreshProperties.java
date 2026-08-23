@@ -1,18 +1,25 @@
 package com.samsepiol.portfolio.configuration;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
 @Validated
+@Data
 @ConfigurationProperties(prefix = "portfolio.github-refresh")
-public record GitHubRefreshProperties(
-        boolean enabled,
-        boolean publicApproved,
-        @NotBlank String profileId,
-        @NotBlank @Pattern(regexp = "[A-Za-z0-9-]{1,39}") String handle,
-        @NotBlank @Pattern(regexp = "[A-Za-z0-9-]{1,39}") String repositoryOwner,
-        @NotBlank @Pattern(regexp = "[A-Za-z0-9_.-]{1,100}") String repositoryName,
-        @NotBlank String cron) {
+public class GitHubRefreshProperties {
+    @NotNull
+    private Boolean enabled;
+    @NotNull
+    private Boolean publicApproved;
+    @NotBlank
+    private String profileId;
+    @NotBlank
+    @Pattern(regexp = "[A-Za-z0-9-]{1,39}")
+    private String handle;
+    @NotBlank
+    private String cron;
 }

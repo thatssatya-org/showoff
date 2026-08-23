@@ -1,7 +1,6 @@
 package com.samsepiol.portfolio.configuration;
 
 import com.samsepiol.library.http.client.HttpClient;
-import com.samsepiol.library.http.client.impl.DefaultHttpClient;
 import com.samsepiol.library.http.config.HttpConfig;
 import com.samsepiol.library.http.config.HttpConfigService;
 import com.samsepiol.portfolio.application.ListmonkNewsletterSubscriptionService;
@@ -39,20 +38,10 @@ public class NewsletterSubscriptionConfiguration {
         }
 
         @Bean
-        HttpConfig listmonkHttpConfig(java.util.List<HttpConfigService> services) {
-            return new HttpConfig(services);
-        }
-
-        @Bean(destroyMethod = "close")
-        HttpClient listmonkHttpClient(HttpConfig listmonkHttpConfig) {
-            return new DefaultHttpClient(listmonkHttpConfig);
-        }
-
-        @Bean
         NewsletterSubscriptionService listmonkNewsletterSubscriptionService(
-                HttpClient listmonkHttpClient,
+                HttpClient httpClient,
                 ListmonkProperties properties) {
-            return new ListmonkNewsletterSubscriptionService(listmonkHttpClient, properties);
+            return new ListmonkNewsletterSubscriptionService(httpClient, properties);
         }
 
         private static HttpConfig.ServiceConfig listmonkServiceConfig(ListmonkProperties properties) {

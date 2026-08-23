@@ -7,6 +7,7 @@ import com.samsepiol.portfolio.domain.CapabilityState;
 import com.samsepiol.portfolio.domain.CapabilityType;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
+import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.jackson.Jacksonized;
@@ -48,7 +49,8 @@ public final class ExternalSnapshotEntity extends Entity {
     Instant validUntil;
     @NonNull
     @BsonProperty("content")
-    Map<String, Object> content;
+    @Singular("contentEntry")
+    Map<String, String> content;
     @BsonProperty("publicApproved")
     boolean publicApproved;
     @BsonProperty("profileEnabled")
@@ -65,7 +67,7 @@ public final class ExternalSnapshotEntity extends Entity {
             @NonNull @BsonProperty("sourceLabel") String sourceLabel,
             @NonNull @BsonProperty("refreshedAt") Instant refreshedAt,
             @NonNull @BsonProperty("validUntil") Instant validUntil,
-            @NonNull @BsonProperty("content") Map<String, Object> content,
+            @NonNull @BsonProperty("content") Map<String, String> content,
             @BsonProperty("publicApproved") boolean publicApproved,
             @BsonProperty("profileEnabled") boolean profileEnabled,
             @BsonProperty("providerEtag") String providerEtag) {
@@ -80,12 +82,6 @@ public final class ExternalSnapshotEntity extends Entity {
         this.publicApproved = publicApproved;
         this.profileEnabled = profileEnabled;
         this.providerEtag = providerEtag;
-    }
-
-    protected ExternalSnapshotEntity(ExternalSnapshotEntityBuilder<?, ?> builder) {
-        this(builder.capability, builder.profileId, builder.state, builder.title, builder.sourceLabel,
-                builder.refreshedAt, builder.validUntil, builder.content, builder.publicApproved,
-                builder.profileEnabled, builder.providerEtag);
     }
 
     @Override
