@@ -31,7 +31,7 @@ Use the BOM and library, not dependency versions copied from this file.
 BOM group/artifact:       com.samsepiol:bom
 Library group:            com.samsepiol.library
 Library module artifacts: library-core, library-application, repository-models,
-                          mongo, http, temporal, cache-core/guava or redis,
+                          mongo, token-management, http, temporal, cache-core/guava or redis,
                           lock, health
 Reference implementation: thatssatya-org/file-nexus
 ```
@@ -64,7 +64,7 @@ Do not create a generic `util`, `common`, `helper`, `manager`, `impl` dumping gr
 ### 2.3 Dependency rules
 
 - Import/parent the released Samsepiol BOM. Versions managed by it are omitted from application dependencies.
-- Use the library `mongo` and `repository-models` module, including its `Entity` base type and codec registry. No second `MongoClient` configuration and no repository abstraction that bypasses library codecs.
+- Use the library `mongo` and `repository-models` module, including its `Entity` base type and codec registry. No second `MongoClient` configuration and no repository abstraction that bypasses library codecs. Use `token-management` for every persisted application credential; no portfolio token entity, token repository, encryption wrapper, or direct crypto implementation is allowed.
 - Use library `http` for outbound vendor/Listmonk calls. Do not introduce `RestTemplate`, another HTTP library, a raw `WebClient` wrapper, or a vendor SDK unless first added to the library.
 - Use library cache/lock abstractions. Start with the library’s local cache option. Redis is not a default; introduce it only behind the library when scaling proves it necessary.
 - Use library `temporal`. Temporal Java SDK is transitive/managed through it, not independently versioned.
@@ -95,7 +95,7 @@ PORTFOLIO_TEMPORAL_*
 PORTFOLIO_COLLECTOR_*
 ```
 
-Only load/validate a provider’s required group when its operator profile enables that provider/capability. A deployment containing no Spotify credentials must start normally and its Spotify capability returns `204`. The GitHub fine-grained PAT is not an environment property: it is entered through the private write-only management endpoint and persisted as an encrypted token envelope; only the crypto root/key configuration remains environment-injected.
+Only load/validate a provider’s required group when its operator profile enables that provider/capability. A deployment containing no Spotify credentials must start normally and its Spotify capability returns `204`. The GitHub fine-grained PAT is not an environment property: it is entered through the private write-only management endpoint and persisted through the library `token-management` service; only the crypto root/key configuration remains environment-injected.
 
 ### 3.2 Secret lifecycle
 
@@ -107,11 +107,11 @@ Only load/validate a provider’s required group when its operator profile enabl
 
 ### 3.3 GitHub PAT write boundary
 
-The GitHub PAT write command is an immutable, size-bounded request accepted only by the management security chain after Tailnet/operator authentication. It replaces the encrypted GitHub credential reference atomically and records a redacted audit event (`GITHUB_PAT_UPDATED`) containing actor, timestamp, provider, envelope key ID, and token rotation metadata only. The token value, token hash, and GitHub response are never stored in an audit record.
+The GitHub PAT write command is an immutable, size-bounded request accepted only by the management security chain after Tailnet/operator authentication. Its JSON contract contains exactly one field: `{ "token": "…" }`. The controller constructs the library `TokenStorageContext` from a fixed server-owned GitHub `TokenReference`, per-record AAD, and current key ID; clients cannot supply a provider, reference, namespace, key ID, AAD, or persistence identifier. It calls `TokenManagementService.create(...)`, which atomically replaces the encrypted token envelope and returns only a safe receipt. Showoff records a redacted audit event (`GITHUB_PAT_UPDATED`) containing actor, timestamp, provider, envelope key ID, and token rotation metadata only. The token value, token hash, and GitHub response are never stored in an audit record.
 
-The GitHub refresh service resolves the enabled GitHub provider profile through a projected repository read, decrypts its envelope in process, invokes the shared-library HTTP client against GitHub’s allow-listed host, and discards the plaintext reference after the request. Controllers, public DTOs, capability snapshots, workflow histories, and browser code cannot access it. Revocation/rotation follows the same write-only command path; a disabled/missing profile results in the normal public `204` capability behaviour.
+The GitHub refresh service resolves the enabled GitHub provider profile through a projected repository read and calls `TokenManagementService.useForInternalIntegration(...)` with the same server-owned storage context. The library decrypts the envelope only for the callback scope; the service invokes the shared-library HTTP client against GitHub’s allow-listed host and the library clears its local plaintext buffers afterward. Controllers, public DTOs, capability snapshots, workflow histories, and browser code cannot access it. Revocation/rotation follows the same write-only command path; a disabled/missing profile results in the normal public `204` capability behaviour.
 
-**Release gate:** the PAT command cannot ship until `samsepiol-library` publishes both the versioned token-envelope encryption/decryption abstraction and the Tailnet/operator management-auth boundary consumed by this API. Do not add direct `Cipher`, AES-GCM, keystore, crypto wrapper, or ad-hoc bearer-token guard code in the portfolio application to bridge either gap. The crypto abstraction must own envelope construction, key-ID/algorithm/nonce metadata, rotation, and test vectors; the management abstraction must own operator-route authentication and default-deny enforcement. This application only persists immutable library results and invokes the released interfaces.
+**Release gate:** the PAT command cannot ship until `samsepiol-library` publishes a released `token-management` module and the BOM governs that version. Do not add direct `Cipher`, AES-GCM, keystore, crypto wrapper, token entity/repository, or ad-hoc bearer-token guard code in the portfolio application. `token-management` owns envelope construction, key-ID/algorithm/nonce metadata, rotation, Mongo persistence, and default-deny management authorization; this application only supplies trusted upstream identity, server-owned storage context, and the released interfaces.
 
 ## 4. Data model and MongoDB rules
 
