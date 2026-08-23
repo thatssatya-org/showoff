@@ -1,0 +1,140 @@
+---
+import "../styles/global.css";
+
+import ThemeToggle from "../components/ThemeToggle.astro";
+import { siteIdentity, siteUrl } from "../data/site";
+
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+const canonical = new URL(Astro.url.pathname, siteUrl).toString();
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Person",
+      name: siteIdentity.name,
+      url: siteUrl,
+      sameAs: [siteIdentity.githubProfile]
+    },
+    {
+      "@type": "WebSite",
+      name: `${siteIdentity.name} — field record`,
+      url: siteUrl
+    }
+  ]
+};
+const themeInitScript = `(() => {
+  const saved = localStorage.getItem("portfolio-theme");
+  const theme = saved === "light" || saved === "dark"
+    ? saved
+    : window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+  document.documentElement.dataset.theme = theme;
+})();`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content={description} />
+    <meta name="robots" content="index,follow" />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary" />
+    <title>{title}</title>
+    <script is:inline set:html={themeInitScript}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)}></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <header class="site-header">
+      <div class="frame site-header__inner">
+        <a class="site-mark" href="/" aria-label="Satyajit Roy home">SR</a>
+        <nav aria-label="Primary navigation">
+          <a href="/projects">Projects</a>
+          <a href="/now">Now</a>
+          <a href="/homelab">Homelab</a>
+          <a href="/uses">Uses</a>
+        </nav>
+        <ThemeToggle />
+      </div>
+    </header>
+    <main id="main-content"><slot /></main>
+    <footer class="site-footer section-rule">
+      <div class="frame site-footer__inner">
+        <p>Static-first. No trackers. Optional sources are owner controlled.</p>
+        <a href="/privacy">Privacy</a>
+      </div>
+    </footer>
+  </body>
+</html>
+
+<style>
+  .site-header {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .site-header__inner,
+  .site-footer__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 4.5rem;
+  }
+
+  .site-mark {
+    font-family: var(--font-display);
+    font-weight: 800;
+    text-decoration: none;
+  }
+
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    justify-content: flex-end;
+    font-size: 0.9rem;
+  }
+
+  nav a {
+    text-decoration: none;
+  }
+
+  .site-footer {
+    color: var(--muted);
+    font-size: 0.875rem;
+  }
+
+  .site-footer p {
+    margin: 0;
+  }
+
+  @media (max-width: 620px) {
+    .site-header__inner {
+      flex-wrap: wrap;
+      padding-block: 0.65rem;
+    }
+
+    nav {
+      order: 3;
+      width: 100%;
+      justify-content: flex-start;
+    }
+
+    .site-footer__inner {
+      align-items: flex-start;
+      flex-direction: column;
+      justify-content: center;
+      padding-block: 1rem;
+    }
+  }
+</style>

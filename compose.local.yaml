@@ -73,9 +73,37 @@ services:
     security_opt:
       - no-new-privileges:true
 
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    image: satya-portfolio-api:local
+    restart: "no"
+    mem_limit: 512m
+    cpus: 0.75
+    pids_limit: 256
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME:?set MONGO_INITDB_ROOT_USERNAME in the process environment}:${MONGO_INITDB_ROOT_PASSWORD:?set MONGO_INITDB_ROOT_PASSWORD in the process environment}@mongodb:27017/${MONGO_INITDB_DATABASE:-portfolio}?authSource=admin
+      PORTFOLIO_PUBLIC_BASE_URL: ${PORTFOLIO_PUBLIC_BASE_URL:?set PORTFOLIO_PUBLIC_BASE_URL in the process environment}
+      SERVER_PORT: "8080"
+    ports:
+      - "127.0.0.1:${PORTFOLIO_API_PORT:-8080}:8080"
+    networks:
+      - portfolio-private
+      - portfolio-edge
+    read_only: true
+    tmpfs:
+      - /tmp:mode=1777,noexec,nosuid,size=32m
+    security_opt:
+      - no-new-privileges:true
+
 networks:
   portfolio-private:
     internal: true
+  portfolio-edge:
 
 volumes:
   portfolio-mongodb-data:

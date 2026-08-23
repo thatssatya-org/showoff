@@ -1,0 +1,247 @@
+@import "tailwindcss";
+
+@theme {
+  --color-carbon: #141619;
+  --color-graphite: #22272c;
+  --color-paper: #f3f1ea;
+  --color-fog: #b8c0c5;
+  --color-signal-blue: #8faef8;
+  --color-road-orange: #dd815a;
+  --font-display: "Recursive", "Arial Narrow", "Arial", sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+}
+
+:root {
+  color-scheme: dark;
+  --page: #141619;
+  --surface: #22272c;
+  --surface-raised: #2b3138;
+  --ink: #f3f1ea;
+  --muted: #b8c0c5;
+  --line: rgb(243 241 234 / 18%);
+  --signal: #8faef8;
+  --accent: #dd815a;
+  --mast-line: rgb(143 174 248 / 58%);
+  font-family: var(--font-body);
+  background: var(--page);
+  color: var(--ink);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --page: #f3f1ea;
+  --surface: #fffdf8;
+  --surface-raised: #e8e5dd;
+  --ink: #171b1e;
+  --muted: #4c555b;
+  --line: rgb(20 22 25 / 19%);
+  --signal: #2858b8;
+  --accent: #a94725;
+  --mast-line: rgb(40 88 184 / 58%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--page);
+  scroll-behavior: smooth;
+}
+
+body {
+  min-width: 320px;
+  margin: 0;
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: inherit;
+  text-underline-offset: 0.22em;
+}
+
+a:hover {
+  color: var(--signal);
+}
+
+:focus-visible {
+  outline: 3px solid var(--signal);
+  outline-offset: 3px;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.skip-link {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 100;
+  transform: translateY(-200%);
+  background: var(--paper);
+  color: var(--carbon);
+  padding: 0.5rem 0.75rem;
+  font-weight: 700;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+.frame {
+  width: min(100% - 2rem, 76rem);
+  margin-inline: auto;
+}
+
+.field-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2.5rem;
+  padding-block: 1.5rem 4rem;
+}
+
+.content-field {
+  min-width: 0;
+}
+
+.section-rule {
+  border-top: 1px solid var(--line);
+}
+
+.section-label,
+.source-meta,
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.section-label,
+.eyebrow {
+  color: var(--muted);
+}
+
+.source-meta {
+  color: var(--muted);
+}
+
+.card {
+  border: 1px solid var(--line);
+  border-radius: 0.4rem;
+  background: var(--surface);
+}
+
+.card:focus-within,
+.card:hover {
+  border-color: var(--mast-line);
+}
+
+.card-reveal {
+  animation: source-reveal 180ms ease-out both;
+}
+
+.newsletter-form {
+  display: grid;
+  gap: 0.6rem;
+  max-width: 34rem;
+}
+
+.newsletter-form label {
+  font-weight: 600;
+}
+
+.newsletter-form__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.newsletter-form input {
+  min-height: 2.9rem;
+  min-width: min(100%, 16rem);
+  flex: 1;
+  border: 1px solid var(--line);
+  border-radius: 0.35rem;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 0.5rem 0.7rem;
+}
+
+.newsletter-form button {
+  min-height: 2.9rem;
+  border: 1px solid var(--signal);
+  border-radius: 0.35rem;
+  background: var(--signal);
+  color: #101319;
+  font-weight: 700;
+  padding: 0.5rem 0.85rem;
+}
+
+.newsletter-form button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.newsletter-form .honeypot {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.newsletter-form .consent,
+.newsletter-form .status,
+.newsletter-form .error {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.newsletter-form .consent {
+  color: var(--muted);
+}
+
+.newsletter-form .error {
+  color: var(--accent);
+}
+
+@keyframes source-reveal {
+  from {
+    opacity: 0.72;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (min-width: 900px) {
+  .field-layout {
+    grid-template-columns: 10.5rem minmax(0, 1fr);
+    gap: clamp(2.5rem, 6vw, 6rem);
+    padding-top: 3rem;
+  }
+}

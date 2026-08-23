@@ -2,6 +2,9 @@
 .env
 .env.*
 !.env.example
+.envrc
+.direnv/
+*.env
 node_modules/
 dist/
 target/
@@ -9,8 +12,22 @@ target/
 
 # Local secrets and persistent volumes
 secrets/
+credentials/
 data/
 postgres-data/
+volumes/
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+id_rsa
+id_ed25519
+docker-compose.override.yml
+docker-compose.override.yaml
+compose.override.yml
+compose.override.yaml
 apps/web/.astro/
 apps/web/coverage/
 apps/api/.mvn/

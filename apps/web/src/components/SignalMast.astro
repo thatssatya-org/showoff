@@ -1,0 +1,93 @@
+---
+import { sourceCategories } from "../data/site";
+
+interface Props {
+  enabledSources?: readonly string[];
+}
+
+const enabled = new Set(Astro.props.enabledSources ?? ["curated"]);
+---
+
+<aside class="signal-mast" aria-label="Content sources">
+  <ol>
+    {
+      sourceCategories.map((source) => (
+        <li class:list={{ "is-enabled": enabled.has(source) }}>
+          <span aria-hidden="true" class="signal-dot"></span>
+          <span>{source}</span>
+        </li>
+      ))
+    }
+  </ol>
+</aside>
+
+<style>
+  .signal-mast {
+    border-block: 1px solid var(--line);
+    padding-block: 0.75rem;
+  }
+
+  ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.045em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .signal-dot {
+    width: 0.55rem;
+    height: 0.55rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: transparent;
+  }
+
+  .is-enabled {
+    color: var(--ink);
+  }
+
+  .is-enabled .signal-dot {
+    border-color: var(--signal);
+    background: var(--signal);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--signal) 15%, transparent);
+  }
+
+  @media (min-width: 900px) {
+    .signal-mast {
+      position: sticky;
+      top: 1.5rem;
+      align-self: start;
+      border-top: 0;
+      border-bottom: 0;
+      border-left: 1px solid var(--mast-line);
+      padding: 0 0 0 1rem;
+    }
+
+    ol {
+      display: grid;
+      gap: 1.15rem;
+    }
+
+    li {
+      position: relative;
+    }
+
+    .signal-dot {
+      position: absolute;
+      left: -1.32rem;
+    }
+  }
+</style>

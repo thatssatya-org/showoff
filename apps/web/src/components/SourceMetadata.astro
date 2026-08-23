@@ -1,0 +1,16 @@
+---
+interface Props {
+  source: string;
+  refreshedAt?: string;
+  stale?: boolean;
+}
+
+const { source, refreshedAt, stale = false } = Astro.props;
+const updated = refreshedAt
+  ? new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(new Date(refreshedAt))
+  : undefined;
+---
+
+<p class="source-meta">
+  {source}{updated ? ` · Updated ${updated}` : ""}{stale ? " · Cached" : ""}
+</p>

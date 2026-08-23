@@ -1,0 +1,42 @@
+---
+import SignalMast from "../components/SignalMast.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="Privacy — Satyajit Roy" description="How the portfolio handles the small amount of data it needs.">
+  <div class="frame field-layout">
+    <SignalMast enabledSources={["curated"]} />
+    <article class="content-field privacy-page">
+      <p class="eyebrow">Privacy</p>
+      <h1>Small data surface. Explicit boundaries.</h1>
+      <p class="intro">This portfolio is static-first. It does not run behavioural analytics, tracking pixels, third-party font requests, or social media embeds.</p>
+
+      <section>
+        <h2>Newsletter</h2>
+        <p>The newsletter form sends the email address, consent-version marker, and minimal anti-abuse fields to the same-origin portfolio API. Confirmation occurs through a double-opt-in message. Subscription data is used only to operate the list and provide unsubscribe or preference controls.</p>
+      </section>
+      <section>
+        <h2>Selected public sources</h2>
+        <p>When enabled, provider cards are server-collected and cached. The browser does not receive provider credentials or contact vendor APIs directly. Each public card identifies its source and refresh time.</p>
+      </section>
+      <section>
+        <h2>Infrastructure</h2>
+        <p>Private infrastructure state, addresses, service inventory, logs, and topology are not published through this site. A homelab story may contain deliberately coarse, owner-approved aggregate information.</p>
+      </section>
+      <section>
+        <h2>Your choices</h2>
+        <p>Do not subscribe if you do not want email delivery. Every confirmed email contains an unsubscribe path. For a data request, use an owner-approved contact route when it is published.</p>
+      </section>
+    </article>
+  </div>
+</BaseLayout>
+
+<style>
+  .privacy-page { max-width: 52rem; padding-block: clamp(2.5rem, 7vw, 6rem); }
+  h1, h2 { font-family: var(--font-display); letter-spacing: -0.06em; }
+  h1 { margin: 0.5rem 0 1.3rem; font-size: clamp(3rem, 7vw, 5.7rem); line-height: 0.84; }
+  .intro { color: var(--muted); font-size: 1.1rem; }
+  section { border-top: 1px solid var(--line); margin-top: 2rem; padding-top: 1.2rem; }
+  h2 { margin: 0; font-size: clamp(1.65rem, 3vw, 2.1rem); }
+  section p { color: var(--muted); }
+</style>

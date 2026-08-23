@@ -1,0 +1,36 @@
+<button class="theme-toggle" type="button" aria-label="Switch colour theme" aria-pressed="false">
+  Theme
+</button>
+
+<script>
+  const toggle = document.querySelector<HTMLButtonElement>(".theme-toggle");
+  const root = document.documentElement;
+
+  const updateLabel = (theme: "light" | "dark") => {
+    const isLight = theme === "light";
+    toggle?.setAttribute("aria-pressed", String(isLight));
+    toggle?.setAttribute("aria-label", `Switch to ${isLight ? "dark" : "light"} theme`);
+    if (toggle) toggle.textContent = isLight ? "Dark" : "Light";
+  };
+
+  updateLabel(root.dataset.theme === "light" ? "light" : "dark");
+  toggle?.addEventListener("click", () => {
+    const next = root.dataset.theme === "light" ? "dark" : "light";
+    root.dataset.theme = next;
+    localStorage.setItem("portfolio-theme", next);
+    updateLabel(next);
+  });
+</script>
+
+<style>
+  .theme-toggle {
+    min-height: 2.75rem;
+    border: 1px solid var(--line);
+    border-radius: 0.35rem;
+    background: transparent;
+    color: var(--ink);
+    padding: 0.5rem 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+  }
+</style>

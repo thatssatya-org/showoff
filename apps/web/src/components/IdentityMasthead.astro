@@ -1,0 +1,131 @@
+---
+import type { SocialLink } from "../data/site";
+
+interface Props {
+  name: string;
+  identityLine: string;
+  themes: readonly string[];
+  thesis: string;
+  socialLinks: readonly SocialLink[];
+}
+
+const { name, identityLine, themes, thesis, socialLinks } = Astro.props;
+---
+
+<header class="identity-masthead">
+  <p class="eyebrow">Independent field record</p>
+  <div class="identity-masthead__topline">
+    <h1>{name}</h1>
+    <a class="subscribe-link" href="/newsletter">Subscribe</a>
+  </div>
+  <p class="identity-line">{identityLine}</p>
+  <p class="themes">{themes.join("  |  ")}</p>
+  <p class="thesis">{thesis}</p>
+  <nav class="social-rail" aria-label="Profiles and contact">
+    {
+      socialLinks.map((link) =>
+        link.href ? (
+          <a href={link.href} rel="me external">{link.label}</a>
+        ) : (
+          <span title="Awaiting owner approval">{link.label}<span class="pending"> · pending</span></span>
+        )
+      )
+    }
+  </nav>
+</header>
+
+<style>
+  .identity-masthead {
+    display: grid;
+    gap: 1rem;
+    padding-block: clamp(2.4rem, 7vw, 6rem) clamp(2.5rem, 6vw, 4.5rem);
+  }
+
+  .identity-masthead__topline {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 1.5rem;
+  }
+
+  h1 {
+    max-width: 12ch;
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(3.2rem, 9vw, 7.5rem);
+    font-variation-settings: "MONO" 0.25, "CASL" 0.35;
+    font-weight: 800;
+    letter-spacing: -0.07em;
+    line-height: 0.84;
+  }
+
+  .subscribe-link {
+    min-height: 2.75rem;
+    border: 1px solid var(--signal);
+    border-radius: 0.35rem;
+    color: var(--signal);
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    text-decoration: none;
+  }
+
+  .identity-line {
+    max-width: 42rem;
+    margin: 0;
+    font-size: clamp(1.15rem, 2vw, 1.45rem);
+    font-weight: 600;
+  }
+
+  .themes,
+  .thesis {
+    max-width: 54rem;
+    margin: 0;
+  }
+
+  .themes {
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.035em;
+    text-transform: uppercase;
+  }
+
+  .thesis {
+    color: var(--muted);
+  }
+
+  .social-rail {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    margin-top: 0.25rem;
+    font-size: 0.9rem;
+  }
+
+  .social-rail a,
+  .social-rail span {
+    min-height: 2rem;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .social-rail span {
+    color: var(--muted);
+  }
+
+  .pending {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+  }
+
+  @media (max-width: 500px) {
+    .identity-masthead__topline {
+      align-items: flex-end;
+    }
+
+    .subscribe-link {
+      flex-shrink: 0;
+    }
+  }
+</style>
