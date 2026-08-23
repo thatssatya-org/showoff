@@ -12,7 +12,7 @@ const enabled = new Set(Astro.props.enabledSources ?? ["curated"]);
   <ol>
     {
       sourceCategories.map((source) => (
-        <li class:list={{ "is-enabled": enabled.has(source) }}>
+        <li data-source={source} class:list={{ "is-enabled": enabled.has(source) }}>
           <span aria-hidden="true" class="signal-dot"></span>
           <span>{source}</span>
         </li>

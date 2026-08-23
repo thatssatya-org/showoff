@@ -12,7 +12,7 @@ const { projects, compact = false } = Astro.props;
 <div class:list={["project-grid", { "project-grid--compact": compact }]}>
   {
     projects.map((project) => (
-      <article class="project-card card card-reveal">
+      <article class="project-card card card-reveal" data-source="curated">
         <p class="section-label">{project.data.sourceLabel}</p>
         <h3><a href={`/projects/${project.data.projectSlug}`}>{project.data.title}</a></h3>
         <p>{project.data.summary}</p>

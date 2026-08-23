@@ -8,7 +8,7 @@ interface Props {
 const { title, body, categories } = Astro.props;
 ---
 
-<section class="homelab-preview card" aria-labelledby="homelab-preview-title">
+<section class="homelab-preview card" data-source="systems" aria-labelledby="homelab-preview-title">
   <p class="section-label">Systems story</p>
   <h2 id="homelab-preview-title">{title}</h2>
   <p>{body}</p>
