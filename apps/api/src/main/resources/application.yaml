@@ -13,3 +13,10 @@ server:
   compression:
     enabled: true
     min-response-size: 1024
+portfolio:
+  github-refresh:
+    enabled: false
+    public-approved: false
+    profile-id: github-primary
+    handle: replace-me
+    cron: "0 */15 * * * *"

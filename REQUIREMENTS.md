@@ -348,9 +348,11 @@ Every collection has an explicit ID prefix, a schema version, retention policy, 
 3. Build GitHub as the only initial dynamic capability. Defer Listmonk, its sender configuration, and all newsletter data collection until a public mail domain is approved.
 4. Launch with static/site-content and GitHub only if all checks pass.
 
-### GitHub adapter release gate
+### GitHub adapter local snapshot contract
 
-The local `http:0.0.4-LIBRARY-SNAPSHOT` transport is not currently safe enough for the GitHub refresh adapter: its public response contract does not expose response headers required to persist `ETag`, GitHub rate-limit state, and `304 Not Modified` handling, while its implementation logs raw upstream response bodies. Do not bypass it with `WebClient`, a vendor SDK, or a direct HTTP client. The scheduled REST/GraphQL adapter remains intentionally unimplemented until the shared HTTP module provides a redacting response envelope with status/headers, bounded body handling, and safe logging. The profile setup and encrypted token write path can be locally verified independently; they never make a GitHub call on a visitor path.
+The locally installed `http:0.0.4-LIBRARY-SNAPSHOT` now exposes `HttpResponseEnvelope` through `HttpClient.executeWithResponse(...)`: a single-consumption, bounded body with status and normalized headers. Its per-API request and response diagnostics are disabled by default; when enabled, credential headers are omitted, common JSON secret fields are redacted, and diagnostic payloads are truncated. Showoff uses this contract only in the disabled-by-default scheduled GitHub public-events refresh. It sends `If-None-Match`, persists GitHub's `ETag`, treats `304 Not Modified` as no replacement, and retains the last known good snapshot on any upstream error. No visitor route can trigger this call, and no `WebClient`, vendor SDK, or direct HTTP client is permitted.
+
+Rate-limit parsing, retry policy, quota persistence, and rate-limit-aware scheduling are deliberately deferred. They belong in a separate shared-library rate-limit module; this HTTP client and Showoff contain no app-side substitute.
 
 ### Phase 3 — selected media integrations
 

@@ -53,6 +53,8 @@ public final class ExternalSnapshotEntity extends Entity {
     boolean publicApproved;
     @BsonProperty("profileEnabled")
     boolean profileEnabled;
+    @BsonProperty("providerEtag")
+    String providerEtag;
 
     @BsonCreator
     public ExternalSnapshotEntity(
@@ -65,7 +67,8 @@ public final class ExternalSnapshotEntity extends Entity {
             @NonNull @BsonProperty("validUntil") Instant validUntil,
             @NonNull @BsonProperty("content") Map<String, String> content,
             @BsonProperty("publicApproved") boolean publicApproved,
-            @BsonProperty("profileEnabled") boolean profileEnabled) {
+            @BsonProperty("profileEnabled") boolean profileEnabled,
+            @BsonProperty("providerEtag") String providerEtag) {
         this.capability = capability;
         this.profileId = profileId;
         this.state = state;
@@ -76,12 +79,13 @@ public final class ExternalSnapshotEntity extends Entity {
         this.content = Map.copyOf(content);
         this.publicApproved = publicApproved;
         this.profileEnabled = profileEnabled;
+        this.providerEtag = providerEtag;
     }
 
     protected ExternalSnapshotEntity(ExternalSnapshotEntityBuilder<?, ?> builder) {
         this(builder.capability, builder.profileId, builder.state, builder.title, builder.sourceLabel,
                 builder.refreshedAt, builder.validUntil, builder.content, builder.publicApproved,
-                builder.profileEnabled);
+                builder.profileEnabled, builder.providerEtag);
     }
 
     @Override

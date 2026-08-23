@@ -40,11 +40,11 @@ public class GitHubPatManagementController {
                                        HttpServletRequest servletRequest) {
         var request = GitHubPatUpdateRequest.from(requestBody);
         var authorization = tailnetManagementAccess.authorize(servletRequest);
-        tokenManagementService.create(new TokenCreationRequest(request.getToken()), storageContext(), authorization);
+        tokenManagementService.create(TokenCreationRequest.builder().token(request.getToken()).build(), storageContext(), authorization);
         return ResponseEntity.noContent().header(HttpHeaders.CACHE_CONTROL, "no-store").build();
     }
 
     private TokenStorageContext storageContext() {
-        return new TokenStorageContext(GITHUB_TOKEN_REFERENCE, tokenProperties.keyId());
+        return TokenStorageContext.builder().reference(GITHUB_TOKEN_REFERENCE).keyId(tokenProperties.keyId()).build();
     }
 }

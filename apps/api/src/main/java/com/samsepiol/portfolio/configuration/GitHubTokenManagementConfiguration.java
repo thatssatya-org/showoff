@@ -1,8 +1,8 @@
 package com.samsepiol.portfolio.configuration;
 
-import com.samsepiol.library.core.security.credential.AesGcmCredentialEnvelopeCipher;
-import com.samsepiol.library.core.security.credential.CredentialEnvelopeCipher;
-import com.samsepiol.library.core.security.credential.CredentialKeyResolver;
+import com.samsepiol.library.encryption.credential.AesGcmCredentialEnvelopeCipher;
+import com.samsepiol.library.encryption.credential.CredentialEnvelopeCipher;
+import com.samsepiol.library.encryption.credential.CredentialKeyResolver;
 import com.samsepiol.library.core.security.management.ManagementAuthorizationBoundary;
 import com.samsepiol.library.core.security.management.PolicyBackedManagementAuthorization;
 import com.samsepiol.library.mongo.Repository;
@@ -26,6 +26,7 @@ import java.util.Base64;
 @EnableConfigurationProperties(GitHubTokenProperties.class)
 public class GitHubTokenManagementConfiguration {
     public static final String GITHUB_TOKEN_WRITE_OPERATION = "github-token-write";
+    public static final String GITHUB_TOKEN_USE_OPERATION = "github-token-use";
 
     @Bean
     CredentialKeyResolver gitHubTokenCredentialKeyResolver(GitHubTokenProperties properties) {
@@ -40,14 +41,16 @@ public class GitHubTokenManagementConfiguration {
 
     @Bean
     CredentialEnvelopeCipher gitHubTokenEnvelopeCipher(CredentialKeyResolver gitHubTokenCredentialKeyResolver) {
-        return new AesGcmCredentialEnvelopeCipher(gitHubTokenCredentialKeyResolver);
+        return new AesGcmCredentialEnvelopeCipher(gitHubTokenCredentialKeyResolver, System::currentTimeMillis);
     }
 
     @Bean
     ManagementAuthorizationBoundary gitHubTokenManagementAuthorizationBoundary() {
         return new PolicyBackedManagementAuthorization(request ->
-                GITHUB_TOKEN_WRITE_OPERATION.equals(request.getOperation())
-                        && request.getPrincipalId().startsWith("tailnet:"));
+                (GITHUB_TOKEN_WRITE_OPERATION.equals(request.getOperation())
+                        && request.getPrincipalId().startsWith("tailnet:"))
+                        || (GITHUB_TOKEN_USE_OPERATION.equals(request.getOperation())
+                        && "github-refresh-scheduler".equals(request.getPrincipalId())));
     }
 
     @Bean

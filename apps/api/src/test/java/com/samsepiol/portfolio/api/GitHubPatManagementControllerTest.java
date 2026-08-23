@@ -65,8 +65,9 @@ class GitHubPatManagementControllerTest {
         var authorization = ArgumentCaptor.forClass(ManagementAuthorizationRequest.class);
         verify(tokenManagementService).create(request.capture(), storageContext.capture(), authorization.capture());
         assertThat(request.getValue().tokenCopy()).containsExactly(TOKEN.toCharArray());
-        assertThat(storageContext.getValue()).isEqualTo(new TokenStorageContext(
-                new TokenReference("portfolio", "github", "personal-access-token"), "github-token-v1"));
+        assertThat(storageContext.getValue()).isEqualTo(TokenStorageContext.builder()
+                .reference(new TokenReference("portfolio", "github", "personal-access-token"))
+                .keyId("github-token-v1").build());
         assertThat(authorization.getValue().getPrincipalId()).isEqualTo("tailnet:100.64.12.34");
         assertThat(authorization.getValue().getAttributes()).isEmpty();
     }
