@@ -5,7 +5,9 @@
 This workspace has locally installed the current platform source snapshots for
 development only. They are not a released dependency pair and must not be used
 to satisfy the deployment/release gate in
-[`BACKEND_IMPLEMENTATION_SPEC.md`](BACKEND_IMPLEMENTATION_SPEC.md).
+[`BACKEND_IMPLEMENTATION_SPEC.md`](BACKEND_IMPLEMENTATION_SPEC.md). The owner
+has explicitly authorised their use for the current GitHub token-management
+integration work only; this does not change the deployment/release gate.
 
 | Source repository | Revision | Installed coordinate |
 | --- | --- | --- |
@@ -13,7 +15,9 @@ to satisfy the deployment/release gate in
 | `platform/samsepiol-library` | `627f2a0` (`master`, no local tag) | `com.samsepiol.library:*:0.0.4-LIBRARY-SNAPSHOT` |
 
 The BOM declares Java 21 and Spring Boot 3.3.4. The verified toolchain for
-this local build is Temurin 21.0.12.1 and Maven 3.9.9.
+this local build is Temurin 21.0.12.1 and Maven 3.9.9. In Showoff, run Maven
+through `./mvnw`; it uses these supplied tools directly and does not download a
+wrapper distribution.
 
 ## Build order
 
@@ -43,7 +47,7 @@ The complete reactor installed the following coordinates at
 ```text
 ai, cache, cache-core, guava, health, http, kafka, library-application,
 library-core, library-root, lock, message-queue, message-queue-core, mongo,
-mysql, redis, repository, repository-models, temporal
+mysql, redis, repository, repository-models, temporal, token-management
 ```
 
 The portfolio platform contract identifies these relevant modules:

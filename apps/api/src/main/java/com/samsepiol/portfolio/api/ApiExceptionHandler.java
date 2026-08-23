@@ -1,5 +1,7 @@
 package com.samsepiol.portfolio.api;
 
+import com.samsepiol.library.core.security.management.ManagementAuthorizationDeniedException;
+import com.samsepiol.portfolio.security.ManagementAccessDeniedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -18,6 +20,7 @@ public class ApiExceptionHandler {
     private static final URI INVALID_NEWSLETTER_SUBSCRIPTION = URI.create("https://portfolio.invalid/problems/invalid-newsletter-subscription");
     private static final URI NEWSLETTER_UNAVAILABLE = URI.create("https://portfolio.invalid/problems/newsletter-unavailable");
     private static final URI NEWSLETTER_RATE_LIMITED = URI.create("https://portfolio.invalid/problems/newsletter-rate-limited");
+    private static final URI MANAGEMENT_FORBIDDEN = URI.create("https://portfolio.invalid/problems/management-forbidden");
 
     @ExceptionHandler(InvalidCapabilityException.class)
     ProblemDetail invalidCapability(InvalidCapabilityException exception) {
@@ -30,6 +33,15 @@ public class ApiExceptionHandler {
     @ExceptionHandler({NewsletterSubscriptionException.class, MethodArgumentNotValidException.class, HttpMessageNotReadableException.class})
     ProblemDetail invalidNewsletterSubscription(Exception exception) {
         return newsletterProblem(HttpStatus.BAD_REQUEST, "Invalid newsletter subscription");
+    }
+
+    @ExceptionHandler(GitHubPatRequestException.class)
+    ProblemDetail invalidGitHubPatRequest(GitHubPatRequestException exception) {
+        var problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
+                "The management request could not be accepted.");
+        problem.setType(MANAGEMENT_FORBIDDEN);
+        problem.setTitle("Invalid management request");
+        return problem;
     }
 
     @ExceptionHandler(NewsletterOriginRejectedException.class)
@@ -51,6 +63,15 @@ public class ApiExceptionHandler {
                 "The subscription request could not be accepted.");
         problem.setType(NEWSLETTER_RATE_LIMITED);
         problem.setTitle("Too many subscription requests");
+        return problem;
+    }
+
+    @ExceptionHandler({ManagementAccessDeniedException.class, ManagementAuthorizationDeniedException.class})
+    ProblemDetail managementForbidden(RuntimeException exception) {
+        var problem = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN,
+                "The management request could not be accepted.");
+        problem.setType(MANAGEMENT_FORBIDDEN);
+        problem.setTitle("Management request forbidden");
         return problem;
     }
 

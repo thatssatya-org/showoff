@@ -49,15 +49,13 @@ Before release, run `npm test && npm run typecheck && npm run lint && npm run bu
 The API lives in `apps/api`. It targets the Java/Spring versions governed by the
 Samsepiol BOM and requires the locally built platform coordinates during
 development. Build the BOM and library in the documented order first; see
-[local platform development](docs/PLATFORM_LOCAL_DEVELOPMENT.md).
+[local platform development](docs/PLATFORM_LOCAL_DEVELOPMENT.md). Use the
+repository-local `./mvnw` entrypoint: it pins the supplied JDK 21 and Maven
+3.9.9 regardless of the caller's `PATH` and never downloads Maven.
 
 ```bash
-export JAVA_HOME=/home/openclaw/.openclaw/workspace/platform/toolchains/jdk-21.0.12.1+1
-export PATH="$JAVA_HOME/bin:/home/openclaw/.openclaw/workspace/platform/toolchains/apache-maven-3.9.9/bin:$PATH"
-
-cd apps/api
-mvn --batch-mode --no-transfer-progress -T 1 test
-mvn --batch-mode --no-transfer-progress -T 1 package
+./mvnw -f apps/api/pom.xml test
+./mvnw -f apps/api/pom.xml package
 ```
 
 `compose.local.yaml` keeps MongoDB and Temporal on an internal network. The
@@ -84,9 +82,7 @@ cp .env.example .env
 # TEMPORAL_POSTGRES_USER, TEMPORAL_POSTGRES_PASSWORD,
 # PORTFOLIO_PUBLIC_BASE_URL, and PUBLIC_SITE_URL in .env.
 
-cd apps/api
-mvn --batch-mode --no-transfer-progress -T 1 package
-cd ../..
+./mvnw -f apps/api/pom.xml package
 docker compose --env-file .env -f compose.local.yaml up --build --detach
 ```
 

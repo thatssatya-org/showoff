@@ -61,6 +61,11 @@
             <version>${samsepiol.library.version}</version>
         </dependency>
         <dependency>
+            <groupId>com.samsepiol.library</groupId>
+            <artifactId>token-management</artifactId>
+            <version>${samsepiol.library.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
