@@ -78,7 +78,7 @@ services:
       context: ./apps/api
       dockerfile: Dockerfile
     image: showoff-api:local
-    restart: "no"
+    restart: unless-stopped
     mem_limit: 512m
     cpus: 0.75
     pids_limit: 256
@@ -117,7 +117,7 @@ services:
         PUBLIC_ENABLE_LIVE_CAPABILITIES: ${PUBLIC_ENABLE_LIVE_CAPABILITIES:-true}
         PUBLIC_ENABLE_OPERATOR_GITHUB_SETUP: ${PUBLIC_ENABLE_OPERATOR_GITHUB_SETUP:-true}
     image: showoff-web:local
-    restart: "no"
+    restart: unless-stopped
     mem_limit: 192m
     cpus: 0.50
     pids_limit: 128
