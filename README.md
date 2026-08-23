@@ -108,3 +108,17 @@ Rebuild the web container, then use the **Connect GitHub** control from a
 Tailnet address to save the token. The API stores it encrypted and the refresh
 worker writes an approved cached snapshot on its next schedule; the frontend
 then renders the GitHub activity component.
+
+For a local Tailnet deployment, keep the API internal and place Tailscale Serve
+only in front of the web gateway. The local Compose edge network is pinned to
+`172.30.0.0/24`; configure that exact CIDR as
+`PORTFOLIO_GITHUB_TOKEN_TRUSTED_PROXY_CIDRS`. Nginx also recognises the local
+Tailscale Serve bridge solely to recover the original client address from
+`X-Forwarded-For`; the API must never trust that bridge, a Tailnet range, LAN
+range, or public range as a proxy. The same Tailnet-only proxy provides the
+manual `POST /operator/github/activity/refresh` action. A successful refresh
+returns `204`; an empty token submission returns `400`, not `403`.
+
+GitHub snapshot persistence uses BSON `Long` epoch-millisecond fields
+(`refreshedAtEpochMillis` and `validUntilEpochMillis`) to avoid Java-Time codec
+coupling. Public capability responses continue to expose ISO-8601 timestamps.
