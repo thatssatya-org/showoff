@@ -158,6 +158,7 @@ Nothing is published merely because a vendor account or repository is discoverab
 - Show the last 8 public events, grouped so a multi-commit push does not create visual noise. Render the feed as a timeline with an accessible newest-first/oldest-first sort control; sorting operates over the cached public snapshot and does not refetch GitHub.
 - Show a year contribution heat map and total public contribution count. The owner has opted into GitHub-style anonymous private-contribution disclosure: private contributions may be merged into the calendar and total only, labelled as containing private contributions. Never publish a private repository name, organisation, URL, event type, commit/revision, issue/PR, language, title, body, or time more precise than the calendar day. The public event timeline remains public-only.
 - Enrich only Easy Fintrack from public GitHub data. File Nexus remains an owner-authored card; its private-repository metadata and activity are not a public API source.
+- The GitHub fine-grained personal access token is accepted only through a Tailnet-restricted management `POST` endpoint, encrypted before MongoDB persistence, and fetched/decrypted only inside the scheduled GitHub adapter. There is no credential `GET`, list, echo, OpenAPI example, audit payload, or browser response. The public visitor path reads cached snapshots only.
 - Cache GitHub data, respect rate limits/ETags, and continue serving the last known good snapshot on an outage.
 
 ### FR-3: Spotify music card
@@ -329,6 +330,7 @@ Every collection has an explicit ID prefix, a schema version, retention policy, 
 - [x] Featured project content is approved: publish File Nexus as the data-ingestion and transformation platform, and Easy Fintrack as its statement-to-ledger dashboard companion. File Nexus uses the owner-approved repository URL; its availability must be checked before presenting it as a public source record.
 - [x] Initial dynamic-integration scope is GitHub only. Spotify, Instagram, LinkedIn, and YouTube remain curated/manual links until separately approved.
 - [x] GitHub presentation scope is approved: profile `thatssatya`; eight-event public-only timeline with newest/oldest sorting; public Easy Fintrack enrichment; and a GitHub-style anonymous private-contribution heat map/total. File Nexus stays owner-authored despite its approved repository link.
+- [x] GitHub authentication uses a fine-grained PAT stored only as a versioned encrypted MongoDB envelope. It is supplied through a Tailnet-restricted write-only management `POST` and is decrypted only by the internal GitHub sync path.
 - [x] Newsletter is deferred. Hide subscription controls and collect no email addresses until the owner approves a public sender domain and self-hosted delivery configuration.
 - [ ] Approve a public mail domain and sender identity before enabling the newsletter.
 
@@ -341,8 +343,9 @@ Every collection has an explicit ID prefix, a schema version, retention policy, 
 ### Phase 2 — first-party data and GitHub
 
 1. Build the generic provider-profile/capability registry, capability-manifest API, and GitHub Strategy adapter with Mongo snapshots, indexes, projections, ETags, rate-limit handling, and owner-curation overrides. Its publication projection exposes eight public events and Easy Fintrack enrichment only; the private-contribution projection is calendar/total-only with no private repository/event metadata.
-2. Build GitHub as the only initial dynamic capability. Defer Listmonk, its sender configuration, and all newsletter data collection until a public mail domain is approved.
-3. Launch with static/site-content and GitHub only if all checks pass.
+2. Before implementing the PAT command, add and release the versioned Mongo token-envelope and Tailnet/operator management-auth abstractions in `samsepiol-library`; application-level `Cipher`/AES-GCM code or ad-hoc bearer guard is prohibited. Then provide a Tailnet-restricted write-only `POST` management endpoint for the fine-grained GitHub PAT. Encrypt it with that library abstraction, persist no plaintext, expose no credential read endpoint, and let only the scheduled/internal GitHub adapter decrypt it for official GitHub calls.
+3. Build GitHub as the only initial dynamic capability. Defer Listmonk, its sender configuration, and all newsletter data collection until a public mail domain is approved.
+4. Launch with static/site-content and GitHub only if all checks pass.
 
 ### Phase 3 — selected media integrations
 

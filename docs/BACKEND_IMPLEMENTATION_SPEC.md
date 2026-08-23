@@ -95,14 +95,23 @@ PORTFOLIO_TEMPORAL_*
 PORTFOLIO_COLLECTOR_*
 ```
 
-Only load/validate a provider’s required group when its operator profile enables that provider/capability. A deployment containing no Spotify credentials must start normally and its Spotify capability returns `204`.
+Only load/validate a provider’s required group when its operator profile enables that provider/capability. A deployment containing no Spotify credentials must start normally and its Spotify capability returns `204`. The GitHub fine-grained PAT is not an environment property: it is entered through the private write-only management endpoint and persisted as an encrypted token envelope; only the crypto root/key configuration remains environment-injected.
 
 ### 3.2 Secret lifecycle
 
 - Encrypt persisted OAuth refresh tokens using versioned AES-GCM envelope encryption. Persist ciphertext, key ID, nonce, algorithm/version, and rotation metadata—never plaintext.
+- Persist the GitHub fine-grained PAT in the same versioned AES-GCM envelope form. It is accepted only through `POST /internal/v1/provider-profiles/github/pat` on the Tailnet-restricted management surface. The request body is redacted before logging; a successful response is `204 No Content`. There is no credential `GET`, list, export, echo, OpenAPI example, metric tag, audit payload, or public projection. Only the internal scheduled GitHub Strategy/service decrypts the token immediately before an allow-listed official GitHub API request.
 - OAuth state uses a short-lived, signed, HttpOnly, Secure, SameSite state cookie and a server-side one-time correlation record. Validate exact redirect URI and state before token exchange.
 - Create one HMAC secret per collector identity. Verify algorithm, timestamp window, nonce/replay record, body digest, and allow-listed schema before persistence.
 - Produce only redacted configuration/error diagnostics. Tests assert that token-like text cannot enter logs or RFC 9457 problem detail.
+
+### 3.3 GitHub PAT write boundary
+
+The GitHub PAT write command is an immutable, size-bounded request accepted only by the management security chain after Tailnet/operator authentication. It replaces the encrypted GitHub credential reference atomically and records a redacted audit event (`GITHUB_PAT_UPDATED`) containing actor, timestamp, provider, envelope key ID, and token rotation metadata only. The token value, token hash, and GitHub response are never stored in an audit record.
+
+The GitHub refresh service resolves the enabled GitHub provider profile through a projected repository read, decrypts its envelope in process, invokes the shared-library HTTP client against GitHub’s allow-listed host, and discards the plaintext reference after the request. Controllers, public DTOs, capability snapshots, workflow histories, and browser code cannot access it. Revocation/rotation follows the same write-only command path; a disabled/missing profile results in the normal public `204` capability behaviour.
+
+**Release gate:** the PAT command cannot ship until `samsepiol-library` publishes both the versioned token-envelope encryption/decryption abstraction and the Tailnet/operator management-auth boundary consumed by this API. Do not add direct `Cipher`, AES-GCM, keystore, crypto wrapper, or ad-hoc bearer-token guard code in the portfolio application to bridge either gap. The crypto abstraction must own envelope construction, key-ID/algorithm/nonce metadata, rotation, and test vectors; the management abstraction must own operator-route authentication and default-deny enforcement. This application only persists immutable library results and invokes the released interfaces.
 
 ## 4. Data model and MongoDB rules
 
@@ -112,7 +121,7 @@ Only load/validate a provider’s required group when its operator profile enabl
 | --- | --- | --- | --- |
 | `siteContent` | unique content key; visibility/order as queried | owner-content service | projection only |
 | `projects` | unique slug; visibility; display order | project service | projection only |
-| `providerProfiles` | unique provider type; enabled; capability | provider profile service | never public directly |
+| `providerProfiles` | unique provider type; enabled; capability | provider profile service | never public directly; GitHub PAT is a versioned encrypted envelope only |
 | `externalSnapshots` | unique `{capability, profileId}`; `validUntil`; `refreshedAt` | provider sync service | approved public projection only |
 | `newsletterRequests` | unique idempotency key; short retention expiry | newsletter service | never public |
 | `homelabSummaries` | collector ID + observed timestamp; publish timestamp | collector service | allow-listed projection only |
@@ -246,7 +255,7 @@ Workflow code is deterministic orchestration only: activity invocation, identifi
 
 ## 8. Security and network contract
 
-- Public API allows only public GET resources, newsletter POST, health liveness, and exact OAuth callback paths. Management/Actuator/collector routes are a distinct Tailnet/private path and security filter chain.
+- Public API allows only public GET resources, newsletter POST when enabled, health liveness, and exact OAuth callback paths. Management/Actuator/collector routes are a distinct Tailnet/private path and security filter chain. `POST /internal/v1/provider-profiles/github/pat` belongs only to that management chain; no public credential route or credential `GET` exists.
 - TLS terminates at the trusted proxy. Require trusted proxy configuration; never trust arbitrary forwarded headers.
 - Set strict CSP at the web tier; API applies `nosniff`, frame deny, referrer policy, HSTS only after domain/TLS validation, request body limits, and rate limiting.
 - Use UUID/opaque identifiers as appropriate; never use a provider handle to authorise an operation.
@@ -263,7 +272,7 @@ Write the failing test before production implementation. One red-green-refactor 
 | Layer | Tools/boundary | Required cases |
 | --- | --- | --- |
 | Unit | JUnit 5, AssertJ/Mockito only at interface boundaries | DTO immutability, capability factory duplicate/missing key failure, policy state mapping, snapshot mapper, validation, crypto envelope contract |
-| Controller | `@WebMvcTest` or equivalent | `200` DTO/ETag, exact bodyless `204`, invalid input, 429/400 problem response, no secret/error leak |
+| Controller | `@WebMvcTest` or equivalent | `200` DTO/ETag, exact bodyless `204`, invalid input, 429/400 problem response, no secret/error leak; GitHub PAT command is Tailnet/management-only, returns exact `204`, and never serializes the token |
 | Repository | Mongo Testcontainers or isolated local Mongo | codec round-trip, `@BsonCreator` construction, index creation, projection shape, unique/idempotency/TTL behaviour |
 | Provider adapter | mock shared HTTP abstraction | ETag 304, pagination/limit, malformed vendor JSON ignored safely, timeout/429/5xx last-good behaviour, no raw vendor payload propagation |
 | Workflow | Temporal test environment through library | retries, idempotent activities, compensation/reconciliation, workflow contains no business-policy unit under test |
@@ -281,6 +290,7 @@ Write the failing test before production implementation. One red-green-refactor 
 6. Provider error after prior snapshot test: returns stale public 200 without attempting visitor-path network I/O.
 7. Newsletter idempotency/PII redaction test before Listmonk transport work.
 8. Temporal provider-connection orchestration test before OAuth mutation flow.
+9. GitHub PAT command test: a management POST persists an encrypted envelope, while public routes and all GET routes cannot retrieve it; adapter tests prove only the internal service decrypts it and logs/responses never contain the supplied token.
 
 No test relies on a live personal vendor credential. Use redacted JSON fixtures and mock transports. Tests that need infrastructure use local ephemeral/Testcontainers configuration, not the operator’s homelab.
 
