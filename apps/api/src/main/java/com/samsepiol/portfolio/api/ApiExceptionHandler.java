@@ -35,8 +35,8 @@ public class ApiExceptionHandler {
         return newsletterProblem(HttpStatus.BAD_REQUEST, "Invalid newsletter subscription");
     }
 
-    @ExceptionHandler(GitHubPatRequestException.class)
-    ProblemDetail invalidGitHubPatRequest(GitHubPatRequestException exception) {
+    @ExceptionHandler({GitHubPatRequestException.class, BeszelPairingRequestException.class})
+    ProblemDetail invalidProviderManagementRequest(RuntimeException exception) {
         var problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
                 "The management request could not be accepted.");
         problem.setType(MANAGEMENT_FORBIDDEN);

@@ -119,6 +119,11 @@ range, or public range as a proxy. The same Tailnet-only proxy provides the
 manual `POST /operator/github/activity/refresh` action. A successful refresh
 returns `204`; an empty token submission returns `400`, not `403`.
 
+Beszel pairing follows the identical write-only boundary at
+`POST /operator/beszel/pair`. It accepts only a token, is disabled by default,
+and never proxies the Beszel dashboard or API to the browser. The backend owns
+the future REST adapter and can publish only an allow-listed cached summary.
+
 GitHub snapshot persistence uses BSON `Long` epoch-millisecond fields
 (`refreshedAtEpochMillis` and `validUntilEpochMillis`) to avoid Java-Time codec
 coupling. Public capability responses continue to expose ISO-8601 timestamps.

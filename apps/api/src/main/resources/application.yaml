@@ -32,6 +32,9 @@ http-config:
           response-logging-enabled: false
           max-response-body-bytes: 262144
 portfolio:
+  beszel:
+    # The route and provider adapter remain absent unless explicitly enabled.
+    enabled: false
   github-refresh:
     enabled: false
     public-approved: false
