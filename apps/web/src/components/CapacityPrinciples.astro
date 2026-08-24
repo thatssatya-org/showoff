@@ -1,0 +1,56 @@
+---
+import { capacityFillStyle, homelabCapacityPrinciples } from "../lib/homelab-capacity";
+---
+
+<section class="capacity-principles card" aria-labelledby="capacity-principles-title">
+  <header class="capacity-principles__heading">
+    <div>
+      <p class="section-label">Capacity principles</p>
+      <h2 id="capacity-principles-title">Leave the machine room some air.</h2>
+    </div>
+    <p class="capacity-principles__notice">Static illustration · public-safe · not live telemetry</p>
+  </header>
+  <p class="capacity-principles__intro">A small htop-inspired sketch of the operating posture: protect headroom, isolate noisy work, and make recovery easier. It does not describe this host, its services, or current capacity.</p>
+  <ul>
+    {homelabCapacityPrinciples.map((principle) => (
+      <li>
+        <div class="capacity-principles__label">
+          <span>{principle.label}</span>
+          <strong>{principle.posture}</strong>
+        </div>
+        <div
+          class="capacity-principles__bar"
+          role="img"
+          aria-label={`${principle.label}: illustrative capacity principle, ${principle.posture}; not live telemetry.`}
+          style={capacityFillStyle(principle.fill) ?? undefined}
+        >
+          <span aria-hidden="true"></span>
+        </div>
+        <p>{principle.explanation}</p>
+      </li>
+    ))}
+  </ul>
+</section>
+
+<style>
+  .capacity-principles { margin-top: 2rem; overflow: hidden; padding: clamp(1.15rem, 3vw, 2rem); }
+  .capacity-principles__heading { align-items: end; display: flex; gap: 1rem; justify-content: space-between; }
+  h2 { margin: 0.3rem 0 0; font-family: var(--font-display); font-size: clamp(1.85rem, 4vw, 3.1rem); letter-spacing: -0.06em; line-height: 0.92; }
+  .capacity-principles__notice { flex: 0 1 16rem; margin: 0; color: var(--signal); font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.045em; text-align: right; text-transform: uppercase; }
+  .capacity-principles__intro { max-width: 52rem; margin: 1.25rem 0 1.5rem; color: var(--muted); }
+  ul { display: grid; gap: 1.1rem; margin: 0; padding: 0; list-style: none; }
+  li { display: grid; gap: 0.5rem; grid-template-columns: minmax(9rem, 0.7fr) minmax(9rem, 1.35fr) minmax(13rem, 1.4fr); align-items: center; border-top: 1px solid var(--line); padding-top: 1rem; }
+  .capacity-principles__label { display: grid; gap: 0.1rem; }
+  .capacity-principles__label span { color: var(--signal); font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.06em; }
+  .capacity-principles__label strong { font-size: 0.95rem; font-weight: 600; }
+  .capacity-principles__bar { display: flex; align-items: center; height: 0.75rem; overflow: hidden; border: 1px solid var(--mast-line); background: repeating-linear-gradient(90deg, transparent 0 0.65rem, var(--line) 0.72rem 0.82rem); }
+  .capacity-principles__bar > span { width: var(--capacity-fill); height: 100%; background: repeating-linear-gradient(90deg, var(--signal) 0 0.54rem, color-mix(in srgb, var(--signal) 72%, var(--surface)) 0.55rem 0.72rem); }
+  li > p { margin: 0; color: var(--muted); font-size: 0.88rem; }
+
+  @media (max-width: 700px) {
+    .capacity-principles__heading { align-items: start; flex-direction: column; }
+    .capacity-principles__notice { flex-basis: auto; text-align: left; }
+    li { grid-template-columns: 1fr; gap: 0.4rem; }
+    .capacity-principles__bar { min-height: 0.85rem; }
+  }
+</style>

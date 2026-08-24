@@ -91,6 +91,14 @@ the Docker network. Stop the demo with `docker compose --env-file .env -f
 compose.local.yaml down`; append `--volumes` only when discarding local data is
 intended.
 
+### Operator-only Docker metrics
+
+The separate [Beszel operator setup](docs/BESZEL_OPERATOR_SETUP.md) collects
+local Docker container metrics without creating a public service. Its hub is
+bound to loopback and its Docker socket proxy is private to that Compose
+project. It does not connect to the public homelab page, whose htop-like bars
+are a deliberately static capacity-principles illustration.
+
 ### Enable the GitHub activity card
 
 The public card is intentionally absent until the operator explicitly approves

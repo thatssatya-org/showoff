@@ -1,5 +1,6 @@
 ---
 import HomelabPreview from "../components/HomelabPreview.astro";
+import CapacityPrinciples from "../components/CapacityPrinciples.astro";
 import SignalMast from "../components/SignalMast.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { homelabStory } from "../data/site";
@@ -15,6 +16,7 @@ import { homelabStory } from "../data/site";
         <p>Public material is a bounded architecture story. Network maps, hostnames, addresses, ports, live health, capacity, and administrative paths stay private.</p>
       </header>
       <HomelabPreview {...homelabStory} />
+      <CapacityPrinciples />
       <section class="principles section-rule" aria-labelledby="principles-title">
         <p class="section-label">Operating principles</p>
         <h2 id="principles-title">Containment is part of the design.</h2>
