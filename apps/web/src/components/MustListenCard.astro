@@ -22,6 +22,8 @@ const { title, description, href } = Astro.props;
 
 <style>
   .must-listen {
+    display: grid;
+    gap: 1rem;
     padding: 1.25rem;
   }
 
@@ -68,6 +70,11 @@ const { title, description, href } = Astro.props;
     font-family: var(--font-mono);
     font-size: 0.75rem;
     text-decoration: none;
+  }
+
+  .open-link:hover,
+  .open-link:focus-visible {
+    color: var(--signal);
   }
 
   @media (max-width: 440px) {

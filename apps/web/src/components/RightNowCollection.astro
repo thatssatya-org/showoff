@@ -38,7 +38,7 @@ const { items } = Astro.props;
   h2, h3 { font-family: var(--font-display); letter-spacing: -0.04em; }
   h2 { margin: 0.2rem 0 0; font-size: clamp(1.8rem, 4vw, 2.7rem); }
   .right-now__grid { display: grid; gap: 0.75rem; }
-  .right-now__item { display: grid; gap: 0.75rem; padding: 1rem; }
+  .right-now__item { display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; gap: 0.75rem; padding: 1rem; }
   h3, p { margin: 0; }
   h3 { font-size: 1.28rem; }
   .right-now__item > p:not(.section-label) { color: var(--muted); font-size: 0.92rem; }

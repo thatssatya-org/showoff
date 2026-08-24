@@ -19,7 +19,7 @@ const enableLiveCapabilities = import.meta.env.PUBLIC_ENABLE_LIVE_CAPABILITIES =
 
 <BaseLayout title="Satyajit Roy — field record" description={siteIdentity.thesis}>
   <div class="frame field-layout">
-    <SignalMast enabledSources={["curated", "github"]} />
+    <SignalMast enabledSources={["curated", "github", "music", "social"]} />
     <div class="content-field">
       <IdentityMasthead {...siteIdentity} />
 
@@ -77,5 +77,5 @@ const enableLiveCapabilities = import.meta.env.PUBLIC_ENABLE_LIVE_CAPABILITIES =
   .home-section__heading > a { flex-shrink: 0; }
   .newsletter-block { display: grid; gap: 1.5rem; }
   .newsletter-block > div > p:not(.section-label) { max-width: 38rem; color: var(--muted); }
-  @media (min-width: 760px) { .feature-grid { grid-template-columns: minmax(0, 1fr); gap: 2.5rem; } .feature-grid :global(.must-listen) { max-width: 38rem; } .focus-strip, .newsletter-block { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 3rem; } }
+  @media (min-width: 760px) { .feature-grid { grid-template-columns: minmax(0, 1fr); gap: 2.5rem; } .focus-strip, .newsletter-block { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 3rem; } }
 </style>
