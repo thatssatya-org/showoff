@@ -1,0 +1,34 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  href: string;
+  label?: string;
+  featured?: boolean;
+}
+
+const { title, description, href, label = "Spotify playlist", featured = false } = Astro.props;
+---
+
+<article class:list={["music-link", "card", "card-reveal", featured && "music-link--featured"]} data-source="music">
+  <div class="music-link__source" aria-hidden="true">♫</div>
+  <div class="music-link__content">
+    <p class="section-label">{featured ? "Must listen" : "Listening note"} · {label}</p>
+    <h2>{title}</h2>
+    <p class="music-link__description">{description}</p>
+  </div>
+  <a class="music-link__action" href={href} rel="external">Open in Spotify <span aria-hidden="true">↗</span><span class="sr-only">: {title}</span></a>
+</article>
+
+<style>
+  .music-link { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.85rem; padding: 1rem; }
+  .music-link--featured { padding: 1.25rem; }
+  .music-link__source { display: grid; width: 2.5rem; height: 2.5rem; place-items: center; border: 1px solid var(--mast-line); border-radius: 50%; color: var(--mast-line); font-size: 1.25rem; }
+  .music-link__content { min-width: 0; }
+  h2, p { margin: 0; }
+  h2 { margin-top: 0.12rem; font-family: var(--font-display); font-size: clamp(1.45rem, 3vw, 2.2rem); letter-spacing: -0.05em; line-height: 0.95; }
+  .music-link__description { margin-top: 0.65rem; color: var(--muted); font-size: 0.9rem; }
+  .music-link__action { grid-column: 2; width: fit-content; min-height: 2.25rem; display: inline-flex; align-items: center; color: var(--ink); font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.03em; text-decoration: none; text-transform: uppercase; }
+  .music-link__action:hover { color: var(--mast-line); }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+</style>
