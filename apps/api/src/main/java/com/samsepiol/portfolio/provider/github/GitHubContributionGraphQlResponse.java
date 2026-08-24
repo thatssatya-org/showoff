@@ -5,8 +5,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.jackson.Jacksonized;
+import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.List;
+import java.util.Objects;
 
 @Value
 @Builder
@@ -18,11 +20,11 @@ public class GitHubContributionGraphQlResponse {
     List<GitHubContributionGraphQlErrorResponse> errors;
 
     public boolean hasErrors() {
-        return errors != null && !errors.isEmpty();
+        return CollectionUtils.isNotEmpty(errors);
     }
 
     public boolean viewerMatches(String expectedHandle) {
-        return data != null && data.getViewer() != null && data.getViewer().getLogin() != null
+        return Objects.nonNull(data) && Objects.nonNull(data.getViewer()) && Objects.nonNull(data.getViewer().getLogin())
                 && data.getViewer().getLogin().equalsIgnoreCase(expectedHandle);
     }
 }
