@@ -1,5 +1,6 @@
 ---
 import type { RightNowItem } from "../data/site";
+import MusicLinkCard from "./MusicLinkCard.astro";
 
 interface Props {
   items: readonly RightNowItem[];
@@ -16,20 +17,14 @@ const { items } = Astro.props;
   <div class="right-now__grid">
     {
       items.map((item, itemIndex) => (
-        <article class:list={["right-now__item", "card", "card-reveal", item.presentation && `right-now__item--${item.presentation}`]} data-source={item.source}>
+        item.presentation === "music-link" ? (
+          <MusicLinkCard title={item.title} description={item.description} href={item.href} />
+        ) : <article class:list={["right-now__item", "card", "card-reveal", item.presentation && `right-now__item--${item.presentation}`]} data-source={item.source}>
           <p class="section-label">{item.source}</p>
           <h3>{item.title}</h3>
           <p>{item.description}</p>
           {
-            item.presentation === "spotify-player" && item.embedUrl ? (
-              <iframe
-                class="right-now__spotify-player"
-                src={item.embedUrl}
-                title={`Spotify playlist: ${item.title}`}
-                loading="lazy"
-                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-              ></iframe>
-            ) : item.presentation === "photo-carousel" && item.photos ? (
+            item.presentation === "photo-carousel" && item.photos ? (
               <div class="right-now__carousel" data-photo-timeline aria-label={`Photo timeline: ${item.title}`}>
                 <div class="right-now__timeline-bar">
                   <p class="right-now__timeline-status" aria-live="polite">
@@ -47,7 +42,7 @@ const { items } = Astro.props;
                 <div class="right-now__track" id={`photo-timeline-${itemIndex}`} tabindex="0" aria-label={`${item.title} photos`}>
                   {item.photos.map((photo, index) => (
                     <a class="right-now__slide" data-timeline-slide href={item.href} rel="external" aria-label={`Open Aero India album, photo ${index + 1} of ${item.photos?.length}`}>
-                      <img src={photo.src} alt={photo.alt} loading={index === 0 ? "eager" : "lazy"} />
+                      <img src={photo.src} srcset={photo.srcSet} sizes="(min-width: 720px) min(72vw, 34rem), 86vw" width={photo.width} height={photo.height} alt={photo.alt} loading={index === 0 ? "eager" : "lazy"} />
                     </a>
                   ))}
                 </div>
@@ -55,7 +50,7 @@ const { items } = Astro.props;
               </div>
             ) : null
           }
-          {item.presentation !== "photo-carousel" && <a href={item.href} rel="external">{item.presentation === "spotify-player" ? "Open in Spotify ↗" : "Open link"}</a>}
+          {item.presentation !== "photo-carousel" && <a href={item.href} rel="external">Open link</a>}
         </article>
       ))
     }
@@ -72,8 +67,6 @@ const { items } = Astro.props;
   h3, p { margin: 0; }
   h3 { font-size: 1.28rem; }
   .right-now__item > p:not(.section-label) { color: var(--muted); font-size: 0.92rem; }
-  .right-now__item--spotify-player { grid-template-columns: minmax(0, 1fr); }
-  .right-now__spotify-player { display: block; width: 100%; height: 152px; border: 0; border-radius: 0.7rem; }
   .right-now__item--photo-carousel { padding-bottom: 0.85rem; }
   .right-now__carousel { min-width: 0; }
   .right-now__timeline-bar { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.45rem; }
@@ -92,7 +85,6 @@ const { items } = Astro.props;
     .right-now { padding: 0; }
 
     .right-now__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .right-now__item--spotify-player { grid-column: span 2; }
 
     /* Keep the photo record out of the narrow orphan column. It is a sequence,
        so it owns the complete row and lets the carousel read as a field strip. */
