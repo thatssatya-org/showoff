@@ -339,7 +339,7 @@ Every collection has an explicit ID prefix, a schema version, retention policy, 
 
 1. Scaffold Astro frontend and Spring Boot API as separate apps in this repository. The backend imports `samsepiol-bom` and consumes released `samsepiol-library` modules before any portfolio feature code is added.
 2. Implement the semantic homepage, projects, now, uses, privacy, RSS/sitemap/JSON-LD, theme, and accessibility/performance budgets.
-3. Add Docker Compose for local development and production, MongoDB with the library codec configuration, reverse-proxy configuration, health checks, backups, CI, and a staging hostname. Keep Listmonk and its mandated PostgreSQL data volume on an internal-only network.
+3. Add Docker Compose for local development and production, MongoDB with the library codec configuration, reverse-proxy configuration, local health checks, backups, and a staging hostname. Keep Listmonk and its mandated PostgreSQL data volume on an internal-only network.
 
 ### Phase 2 — first-party data and GitHub
 
@@ -379,6 +379,7 @@ Rate-limit parsing, retry policy, quota persistence, and rate-limit-aware schedu
 
 1. Replace local snapshot dependencies with released BOM-governed artifacts before promoting an image.
 2. Add rate-limit parsing, quota persistence, retry policy, and rate-limit-aware scheduling to the dedicated shared-library rate-limit module only if the current conservative refresh intervals cease to provide sufficient headroom. Do not add an application-side substitute.
+3. Add CI hardening—secret, dependency, image, and SAST scanning; unit/integration tests; OpenAPI compatibility; and container health checks—when the service moves beyond the current Tailnet-proxied local deployment or is prepared for promotion.
 
 ## 11. Definition of done / acceptance criteria
 
