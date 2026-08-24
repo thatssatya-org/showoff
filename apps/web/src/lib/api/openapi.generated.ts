@@ -4,6 +4,38 @@
  */
 
 export interface paths {
+    "/internal/v1/provider-profiles/github/pat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["update"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internal/v1/provider-profiles/github/activity/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["refresh"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/newsletter/subscriptions": {
         parameters: {
             query?: never;
@@ -88,6 +120,7 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        JsonNode: Record<string, never>;
         NewsletterSubscriptionRequest: {
             email: string;
             consentVersion: string;
@@ -102,9 +135,9 @@ export interface components {
         };
         CapabilityDescriptorResponse: {
             /** @enum {string} */
-            capability?: "GITHUB_ACTIVITY" | "GITHUB_REPOSITORIES" | "SPOTIFY_ON_REPEAT" | "INSTAGRAM_MEDIA" | "YOUTUBE_UPLOADS" | "LINKEDIN_SELECTED_POSTS" | "HOMELAB_SUMMARY";
+            capability?: "GITHUB_ACTIVITY" | "GITHUB_CONTRIBUTIONS" | "GITHUB_REPOSITORIES" | "SPOTIFY_ON_REPEAT" | "INSTAGRAM_MEDIA" | "YOUTUBE_UPLOADS" | "LINKEDIN_SELECTED_POSTS" | "HOMELAB_SUMMARY";
             /** @enum {string} */
-            componentType?: "ACTIVITY_TIMELINE" | "REPOSITORY_GRID" | "MUSIC_CARD" | "SOCIAL_GRID" | "HOMELAB_SUMMARY";
+            componentType?: "ACTIVITY_TIMELINE" | "CONTRIBUTION_HEATMAP" | "REPOSITORY_GRID" | "MUSIC_CARD" | "SOCIAL_GRID" | "HOMELAB_SUMMARY";
             dataEndpoint?: string;
             title?: string;
             sourceLabel?: string;
@@ -113,9 +146,9 @@ export interface components {
         };
         CapabilitySnapshotResponse: {
             /** @enum {string} */
-            capability?: "GITHUB_ACTIVITY" | "GITHUB_REPOSITORIES" | "SPOTIFY_ON_REPEAT" | "INSTAGRAM_MEDIA" | "YOUTUBE_UPLOADS" | "LINKEDIN_SELECTED_POSTS" | "HOMELAB_SUMMARY";
+            capability?: "GITHUB_ACTIVITY" | "GITHUB_CONTRIBUTIONS" | "GITHUB_REPOSITORIES" | "SPOTIFY_ON_REPEAT" | "INSTAGRAM_MEDIA" | "YOUTUBE_UPLOADS" | "LINKEDIN_SELECTED_POSTS" | "HOMELAB_SUMMARY";
             /** @enum {string} */
-            componentType?: "ACTIVITY_TIMELINE" | "REPOSITORY_GRID" | "MUSIC_CARD" | "SOCIAL_GRID" | "HOMELAB_SUMMARY";
+            componentType?: "ACTIVITY_TIMELINE" | "CONTRIBUTION_HEATMAP" | "REPOSITORY_GRID" | "MUSIC_CARD" | "SOCIAL_GRID" | "HOMELAB_SUMMARY";
             /** @enum {string} */
             state?: "ENABLED" | "DISABLED" | "AWAITING_AUTHORIZATION" | "HIDDEN" | "STALE" | "HEALTHY";
             title?: string;
@@ -135,6 +168,46 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JsonNode"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    refresh: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     subscribe: {
         parameters: {
             query?: never;

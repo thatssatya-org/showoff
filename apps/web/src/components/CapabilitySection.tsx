@@ -1,22 +1,38 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ComponentType } from "react";
 
+import ContributionHeatmap from "./ContributionHeatmap";
+import { parseContributionSummary } from "../lib/github-contributions";
 import { fetchCapabilities, fetchOptionalCapability, type CapabilityDescriptor } from "../lib/api/capabilities";
+import type { components } from "../lib/api/openapi.generated";
 
-const KNOWN_COMPONENTS = new Set(["MUSIC_CARD", "ACTIVITY_TIMELINE", "REPOSITORY_GRID", "SOCIAL_GRID", "HOMELAB_SUMMARY"]);
+type CapabilitySnapshot = Readonly<Required<components["schemas"]["CapabilitySnapshotResponse"]>>;
 
-type CapabilitySnapshot = Readonly<{
-  capability: string;
-  componentType: string;
-  state: string;
-  title: string;
-  sourceLabel: string;
-  refreshedAt: string;
+type CapabilityContentProps = Readonly<{
   content: Readonly<Record<string, string>>;
 }>;
 
 type GitHubActivity = Readonly<{ type: string; day: string; repository: string }>;
 
 type ActivityDay = Readonly<{ day: string; activities: readonly GitHubActivity[] }>;
+
+type CapabilityRenderer = Readonly<{
+  Component: ComponentType<CapabilityContentProps>;
+  isRenderable: (content: Readonly<Record<string, string>>) => boolean;
+}>;
+
+function isCapabilitySnapshot(value: CapabilitySnapshot | null): value is CapabilitySnapshot {
+  if (typeof value !== "object" || value === null) return false;
+  const snapshot = value as Record<string, unknown>;
+  return typeof snapshot.capability === "string"
+    && typeof snapshot.componentType === "string"
+    && typeof snapshot.state === "string"
+    && typeof snapshot.title === "string"
+    && typeof snapshot.sourceLabel === "string"
+    && typeof snapshot.refreshedAt === "string"
+    && typeof snapshot.content === "object"
+    && snapshot.content !== null
+    && Object.values(snapshot.content).every((content) => typeof content === "string");
+}
 
 function parseGitHubActivities(value: string | undefined): readonly GitHubActivity[] {
   if (value === undefined) return [];
@@ -70,14 +86,55 @@ function formatRefreshedAt(value: string): string {
     : `Updated ${new Intl.DateTimeFormat("en", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(parsed)}`;
 }
 
-function CapabilityCard({ capability, snapshot }: Readonly<{
-  capability: CapabilityDescriptor;
-  snapshot: CapabilitySnapshot | null;
-}>) {
-  const activities = capability.componentType === "ACTIVITY_TIMELINE"
-    ? parseGitHubActivities(snapshot?.content.events)
-    : [];
+function ActivityTimeline({ content }: CapabilityContentProps) {
+  const activities = parseGitHubActivities(content.events);
   const activityDays = groupActivitiesByDay(activities);
+
+  if (activityDays.length === 0) return <p className="capability-card__empty">No recent public events in this cache window.</p>;
+
+  return <div className="capability-card__activity" aria-label="Recent GitHub activity">
+    {activityDays.map(({ day, activities: activitiesForDay }) => <section className="activity-day" key={day}>
+      <time className="activity-day__date" dateTime={day}>{formatDay(day)}</time>
+      <ol>
+        {activitiesForDay.map((activity, index) => <li key={`${activity.day}-${activity.repository}-${index}`}>
+          <span className="activity-event">{eventLabel(activity.type)}</span>
+          <strong title={activity.repository}>{activity.repository}</strong>
+        </li>)}
+      </ol>
+    </section>)}
+  </div>;
+}
+
+const CAPABILITY_RENDERERS: Readonly<Record<string, CapabilityRenderer>> = {
+  ACTIVITY_TIMELINE: {
+    Component: ActivityTimeline,
+    isRenderable: () => true
+  },
+  CONTRIBUTION_HEATMAP: {
+    Component: ContributionHeatmap,
+    isRenderable: (content) => parseContributionSummary(content) !== null
+  }
+};
+
+function renderableCapabilities(
+  capabilities: readonly CapabilityDescriptor[],
+  snapshots: ReadonlyMap<string, CapabilitySnapshot>
+): readonly Readonly<{ capability: CapabilityDescriptor; snapshot: CapabilitySnapshot; renderer: CapabilityRenderer }>[] {
+  return capabilities.flatMap((capability) => {
+    const renderer = CAPABILITY_RENDERERS[capability.componentType as string];
+    const snapshot = snapshots.get(capability.capability);
+    if (renderer === undefined || snapshot === undefined || !renderer.isRenderable(snapshot.content)) return [];
+    return [{ capability, snapshot, renderer }];
+  });
+}
+
+function CapabilityCard({ capability, snapshot, renderer }: Readonly<{
+  capability: CapabilityDescriptor;
+  snapshot: CapabilitySnapshot;
+  renderer: CapabilityRenderer;
+}>) {
+  const Renderer = renderer.Component;
+  const isStale = snapshot.state === "STALE";
 
   return (
     <article className="capability-card card card-reveal" data-source={capability.sourceLabel.toLowerCase()}>
@@ -86,23 +143,12 @@ function CapabilityCard({ capability, snapshot }: Readonly<{
           <p className="source-meta">Source / {capability.sourceLabel}</p>
           <h3>{capability.title}</h3>
         </div>
-        <span className="capability-card__status"><span aria-hidden="true"></span> cached</span>
+        <span className="capability-card__status"><span aria-hidden="true"></span>{isStale ? "cached snapshot" : "cached"}</span>
       </header>
-      {activityDays.length > 0 && <div className="capability-card__activity" aria-label="Recent GitHub activity">
-        {activityDays.map(({ day, activities: activitiesForDay }) => <section className="activity-day" key={day}>
-          <time className="activity-day__date" dateTime={day}>{formatDay(day)}</time>
-          <ol>
-            {activitiesForDay.map((activity, index) => <li key={`${activity.day}-${activity.repository}-${index}`}>
-              <span className="activity-event">{eventLabel(activity.type)}</span>
-              <strong title={activity.repository}>{activity.repository}</strong>
-            </li>)}
-          </ol>
-        </section>)}
-      </div>}
-      {activities.length === 0 && <p className="capability-card__empty">No recent public events in this cache window.</p>}
+      <Renderer content={snapshot.content} />
       <footer className="capability-card__footer">
-        <span>{activities.length > 0 ? `${activities.length} public event${activities.length === 1 ? "" : "s"}` : "Snapshot unavailable"}</span>
-        <time dateTime={capability.refreshedAt}>{formatRefreshedAt(capability.refreshedAt)}</time>
+        <span>{isStale ? "Last known good snapshot" : "Cached public snapshot"}</span>
+        <time dateTime={snapshot.refreshedAt}>{formatRefreshedAt(snapshot.refreshedAt)}</time>
       </footer>
     </article>
   );
@@ -115,22 +161,28 @@ export default function CapabilitySection() {
   useEffect(() => {
     const controller = new AbortController();
     void fetchCapabilities(controller.signal).then(async (response) => {
-      const visibleCapabilities = response.filter((capability) => KNOWN_COMPONENTS.has(capability.componentType));
-      setCapabilities(visibleCapabilities);
-      const resolvedSnapshots = await Promise.all(visibleCapabilities.map(async (capability) => [
+      const knownCapabilities = response.filter((capability) => {
+        const isKnown = CAPABILITY_RENDERERS[capability.componentType as string] !== undefined;
+        if (!isKnown && import.meta.env.DEV) console.warn(`Ignoring unknown public capability component: ${capability.componentType}`);
+        return isKnown;
+      });
+      const resolvedSnapshots = await Promise.all(knownCapabilities.map(async (capability) => [
         capability.capability,
-        await fetchOptionalCapability<CapabilitySnapshot>(capability.dataEndpoint, controller.signal)
+        await fetchOptionalCapability<CapabilitySnapshot>(capability.dataEndpoint, controller.signal).catch(() => null)
       ] as const));
       const availableSnapshots = new Map<string, CapabilitySnapshot>();
       resolvedSnapshots.forEach(([capability, snapshot]) => {
-        if (snapshot !== null) availableSnapshots.set(capability, snapshot);
+        if (isCapabilitySnapshot(snapshot)) availableSnapshots.set(capability, snapshot);
       });
+      setCapabilities(knownCapabilities);
       setSnapshots(availableSnapshots);
     }).catch(() => undefined);
     return () => controller.abort();
   }, []);
 
-  if (capabilities.length === 0) return null;
+  const visibleCapabilities = renderableCapabilities(capabilities, snapshots);
+  if (visibleCapabilities.length === 0) return null;
+
   return (
     <section className="live-sources home-section section-rule" aria-labelledby="live-sources-title">
       <div className="live-sources__heading">
@@ -140,7 +192,9 @@ export default function CapabilitySection() {
         </div>
         <p>Owner-connected sources. No visitor tracking.</p>
       </div>
-      <div className="live-sources__grid">{capabilities.map((capability) => <CapabilityCard capability={capability} snapshot={snapshots.get(capability.capability) ?? null} key={capability.capability} />)}</div>
+      <div className="live-sources__grid">
+        {visibleCapabilities.map(({ capability, snapshot, renderer }) => <CapabilityCard capability={capability} snapshot={snapshot} renderer={renderer} key={capability.capability} />)}
+      </div>
     </section>
   );
 }

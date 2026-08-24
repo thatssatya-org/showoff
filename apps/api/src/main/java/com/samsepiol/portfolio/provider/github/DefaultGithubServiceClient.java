@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.time.Instant;
 
 @Component
 @ConditionalOnProperty(prefix = "portfolio.github-refresh", name = "enabled", havingValue = "true")
@@ -18,11 +19,7 @@ public final class DefaultGithubServiceClient implements GithubServiceClient {
     private final HttpClient httpClient;
 
     public GitHubActivityFetchResponse fetchPublicEvents(char[] token, String etag) {
-        var headers = new HashMap<String, String>();
-        headers.put(HttpConstants.Headers.AUTHORIZATION, "Bearer " + new String(token));
-        headers.put("Accept", GithubServiceClient.Constants.ACCEPT);
-        headers.put(GithubServiceClient.Constants.API_VERSION_HEADER, GithubServiceClient.Constants.API_VERSION);
-        headers.put(GithubServiceClient.Constants.USER_AGENT, GithubServiceClient.Constants.USER_AGENT_VALUE);
+        var headers = authenticatedHeaders(token);
         if (etag != null && !etag.isBlank()) {
             headers.put(GithubServiceClient.Constants.IF_NONE_MATCH, etag);
         }
@@ -36,5 +33,39 @@ public final class DefaultGithubServiceClient implements GithubServiceClient {
                 .etag(response.firstHeader(GithubServiceClient.Constants.ETAG).orElse(null))
                 .events(response.getBody() == null ? List.of() : Arrays.asList(response.getBody()))
                 .build();
+    }
+
+    @Override
+    public GitHubContributionFetchResponse fetchContributionCalendar(char[] token, String expectedHandle, Instant from, Instant to) {
+        var headers = authenticatedHeaders(token);
+        headers.put(GithubServiceClient.Constants.CONTENT_TYPE, GithubServiceClient.Constants.APPLICATION_JSON);
+        var response = httpClient.executeWithResponse(ApiRequest.builder()
+                .service(GithubServiceClient.Constants.SERVICE)
+                .api(GithubServiceClient.Constants.CONTRIBUTION_CALENDAR)
+                .headers(headers)
+                .body(GitHubContributionCalendarRequest.builder()
+                        .query(GitHubContributionCalendarRequest.QUERY)
+                        .variables(java.util.Map.of("from", from.toString(), "to", to.toString()))
+                        .build())
+                .build(), GitHubContributionGraphQlResponse.class);
+        var responseBody = response.getBody();
+        return GitHubContributionFetchResponse.builder()
+                .statusCode(response.getStatusCode())
+                .contributionCalendar(responseBody == null || responseBody.getData() == null
+                        || responseBody.getData().getViewer() == null
+                        || responseBody.getData().getViewer().getContributionsCollection() == null
+                        ? null
+                        : responseBody.getData().getViewer().getContributionsCollection().getContributionCalendar())
+                .hasErrors(responseBody != null && (responseBody.hasErrors() || !responseBody.viewerMatches(expectedHandle)))
+                .build();
+    }
+
+    private HashMap<String, String> authenticatedHeaders(char[] token) {
+        var headers = new HashMap<String, String>();
+        headers.put(HttpConstants.Headers.AUTHORIZATION, "Bearer " + new String(token));
+        headers.put("Accept", GithubServiceClient.Constants.ACCEPT);
+        headers.put(GithubServiceClient.Constants.API_VERSION_HEADER, GithubServiceClient.Constants.API_VERSION);
+        headers.put(GithubServiceClient.Constants.USER_AGENT, GithubServiceClient.Constants.USER_AGENT_VALUE);
+        return headers;
     }
 }

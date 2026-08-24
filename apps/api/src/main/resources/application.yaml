@@ -16,12 +16,18 @@ server:
 http-config:
   service-configs:
     github:
-      base-url: "api.github.com/users/${portfolio.github-refresh.handle}"
+      base-url: "api.github.com"
       secured: true
       api-configs:
         public-events:
           method: GET
-          path: "/events/public?per_page=8"
+          path: "/users/${portfolio.github-refresh.handle}/events/public?per_page=8"
+          request-logging-enabled: false
+          response-logging-enabled: false
+          max-response-body-bytes: 262144
+        contribution-calendar:
+          method: POST
+          path: "/graphql"
           request-logging-enabled: false
           response-logging-enabled: false
           max-response-body-bytes: 262144
@@ -32,3 +38,5 @@ portfolio:
     profile-id: github-primary
     handle: replace-me
     cron: "0 */15 * * * *"
+    contribution-cron: "0 5 0 * * *"
+    private-contribution-disclosure-approved: false
