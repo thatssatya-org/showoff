@@ -9,6 +9,7 @@ export const projectSchema = z.object({
   visible: z.literal(true),
   order: z.number().int().nonnegative(),
   externalUrl: z.url().optional(),
+  publicRepository: z.string().regex(/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/).optional(),
   sourceLabel: z.string().min(1),
   imageAlt: z.string().min(1).optional(),
   expiresAt: z.coerce.date().optional(),

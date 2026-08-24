@@ -5,6 +5,7 @@ projectSlug: easy-fintrack
 visible: true
 order: 2
 externalUrl: https://github.com/thatssatya-org/easyfintrack
+publicRepository: thatssatya-org/easyfintrack
 sourceLabel: GitHub
 stack:
   - React 18
