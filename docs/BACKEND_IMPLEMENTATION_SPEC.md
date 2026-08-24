@@ -125,7 +125,7 @@ The scheduled GitHub adapter is an out-of-band capability strategy: projected en
 
 The installed local `http:0.0.4-LIBRARY-SNAPSHOT` exposes a redacting `HttpResponseEnvelope` with status, normalized headers, and a bounded single-consumption body. HTTP diagnostics are API-level opt-in and disabled by default; credential headers are omitted, common JSON secrets are redacted, and payload diagnostics are truncated. The GitHub adapter sends `If-None-Match`, stores `ETag`, accepts `304` without replacing the snapshot, and does not bypass the shared HTTP client with `WebClient`, a vendor SDK, or a direct HTTP client.
 
-Rate-limit parsing, quota persistence, retries, and rate-limit-aware scheduling are intentionally deferred to a separate shared-library rate-limit module. They are absent from this HTTP client and Showoff must not add an app-side substitute. GraphQL contribution-calendar/total and the explicit public Easy Fintrack repository projection are approved adapter increments; all other repository enrichment remains out of scope.
+Rate-limit parsing, quota persistence, retries, and rate-limit-aware scheduling are final-phase technical debt for a separate shared-library rate-limit module. They are absent from this HTTP client and Showoff must not add an app-side substitute. Current conservative refresh intervals provide sufficient headroom, so this work does not gate the GitHub capability. GraphQL contribution-calendar/total and the explicit public Easy Fintrack repository projection are approved adapter increments; all other repository enrichment remains out of scope.
 
 **Implementation status (2026-08-24):** the local snapshot implementation provides the Tailnet-only write boundary,
 manual operator refresh, and disabled-by-default scheduled public-events refresh with projected reads, ETag
@@ -137,8 +137,8 @@ forged callers are rejected. Snapshot storage uses BSON `Long` epoch-millisecond
 The frontend consumes each descriptor's same-origin snapshot endpoint and renders grouped, public-safe events with
 source and cache metadata. The approved repository adapter stores and emits only the configured public repository's
 name, URL, star count, primary language, default-branch commit timestamp, and optional release metadata; mismatched,
-private, and incomplete responses are discarded. The dedicated rate-limit module remains follow-up work; a promoted
-image remains blocked on released BOM-managed artifacts.
+private, and incomplete responses are discarded. The dedicated rate-limit module is final-phase technical debt;
+a promoted image remains blocked on released BOM-managed artifacts.
 
 ## 4. Data model and MongoDB rules
 
