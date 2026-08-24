@@ -56,6 +56,24 @@ public final class DefaultGithubServiceClient implements GithubServiceClient {
                 .build();
     }
 
+    @Override
+    public GitHubRepositoryFetchResponse fetchRepository(char[] token, GitHubRepositoryRequest request) {
+        var headers = authenticatedHeaders(token);
+        headers.put(GithubServiceClient.Constants.CONTENT_TYPE, GithubServiceClient.Constants.APPLICATION_JSON);
+        var response = httpClient.executeWithResponse(ApiRequest.builder()
+                .service(GithubServiceClient.Constants.SERVICE)
+                .api(GithubServiceClient.Constants.CONTRIBUTION_CALENDAR)
+                .headers(headers)
+                .body(request)
+                .build(), GitHubRepositoryGraphQlResponse.class);
+        var responseBody = response.getBody();
+        return GitHubRepositoryFetchResponse.builder()
+                .statusCode(response.getStatusCode())
+                .repository(responseBody == null || responseBody.getData() == null ? null : responseBody.getData().getRepository())
+                .hasErrors(responseBody != null && (responseBody.hasErrors() || !responseBody.repositoryMatches(request)))
+                .build();
+    }
+
     private HashMap<String, String> authenticatedHeaders(char[] token) {
         var headers = new HashMap<String, String>();
         headers.put(HttpConstants.Headers.AUTHORIZATION, "Bearer " + new String(token));

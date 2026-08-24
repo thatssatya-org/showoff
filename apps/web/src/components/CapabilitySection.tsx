@@ -15,6 +15,17 @@ type GitHubActivity = Readonly<{ type: string; day: string; repository: string }
 
 type ActivityDay = Readonly<{ day: string; activities: readonly GitHubActivity[] }>;
 
+type GitHubRepository = Readonly<{
+  repository: string;
+  url: string;
+  stars: number;
+  latestCommitDate: string;
+  language?: string;
+  latestReleaseTag?: string;
+  latestReleaseDate?: string;
+  latestReleaseUrl?: string;
+}>;
+
 type CapabilityRenderer = Readonly<{
   Component: ComponentType<CapabilityContentProps>;
   isRenderable: (content: Readonly<Record<string, string>>) => boolean;
@@ -86,6 +97,24 @@ function formatRefreshedAt(value: string): string {
     : `Updated ${new Intl.DateTimeFormat("en", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(parsed)}`;
 }
 
+function parseGitHubRepository(content: Readonly<Record<string, string>>): GitHubRepository | null {
+  const stars = Number.parseInt(content.stars ?? "", 10);
+  if (content.repository === undefined || content.repository.length === 0 || content.url === undefined || !content.url.startsWith("https://")
+    || !Number.isSafeInteger(stars) || stars < 0 || content.latestCommitDate === undefined || Number.isNaN(new Date(content.latestCommitDate).valueOf())) {
+    return null;
+  }
+  return {
+    repository: content.repository,
+    url: content.url,
+    stars,
+    latestCommitDate: content.latestCommitDate,
+    ...(content.language === undefined ? {} : { language: content.language }),
+    ...(content.latestReleaseTag === undefined ? {} : { latestReleaseTag: content.latestReleaseTag }),
+    ...(content.latestReleaseDate === undefined ? {} : { latestReleaseDate: content.latestReleaseDate }),
+    ...(content.latestReleaseUrl === undefined ? {} : { latestReleaseUrl: content.latestReleaseUrl })
+  };
+}
+
 function ActivityTimeline({ content }: CapabilityContentProps) {
   const activities = parseGitHubActivities(content.events);
   const activityDays = groupActivitiesByDay(activities);
@@ -105,6 +134,25 @@ function ActivityTimeline({ content }: CapabilityContentProps) {
   </div>;
 }
 
+function RepositoryGrid({ content }: CapabilityContentProps) {
+  const repository = parseGitHubRepository(content);
+  if (repository === null) return <p className="capability-card__empty">No approved repository snapshot is available.</p>;
+
+  const release = repository.latestReleaseTag === undefined ? null : repository.latestReleaseUrl === undefined
+    ? repository.latestReleaseTag
+    : <a href={repository.latestReleaseUrl}>Release {repository.latestReleaseTag}</a>;
+
+  return <div className="capability-card__repository">
+    <a className="capability-card__repository-name" href={repository.url}>{repository.repository}</a>
+    <dl>
+      <div><dt>Stars</dt><dd>{repository.stars}</dd></div>
+      {repository.language !== undefined && <div><dt>Language</dt><dd>{repository.language}</dd></div>}
+      <div><dt>Latest commit</dt><dd><time dateTime={repository.latestCommitDate}>{formatDay(repository.latestCommitDate.slice(0, 10))}</time></dd></div>
+      {release !== null && <div><dt>Latest release</dt><dd>{release}</dd></div>}
+    </dl>
+  </div>;
+}
+
 const CAPABILITY_RENDERERS: Readonly<Record<string, CapabilityRenderer>> = {
   ACTIVITY_TIMELINE: {
     Component: ActivityTimeline,
@@ -113,6 +161,10 @@ const CAPABILITY_RENDERERS: Readonly<Record<string, CapabilityRenderer>> = {
   CONTRIBUTION_HEATMAP: {
     Component: ContributionHeatmap,
     isRenderable: (content) => parseContributionSummary(content) !== null
+  },
+  REPOSITORY_GRID: {
+    Component: RepositoryGrid,
+    isRenderable: (content) => parseGitHubRepository(content) !== null
   }
 };
 

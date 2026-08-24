@@ -84,4 +84,35 @@ class DefaultGithubServiceClientTest {
         assertThat(response.isSuccessful()).isTrue();
         assertThat(response.getContributionCalendar()).isEqualTo(calendar);
     }
+
+    @Test
+    void fetchesOnlyTheApprovedRepositoryProjectionThroughGraphQl() {
+        var repository = GitHubRepositorySnapshotResponse.builder().nameWithOwner("owner/easy-fintrack")
+                .isPrivate(false).visibility("PUBLIC").url("https://github.com/owner/easy-fintrack")
+                .stargazerCount(12).primaryLanguage(GitHubRepositoryLanguageResponse.builder().name("Java").build())
+                .defaultBranchRef(GitHubRepositoryBranchResponse.builder()
+                        .target(GitHubRepositoryCommitResponse.builder().committedDate("2026-08-24T00:00:00Z").build()).build())
+                .build();
+        var responseBody = GitHubRepositoryGraphQlResponse.builder()
+                .data(GitHubRepositoryGraphQlDataResponse.builder().repository(repository).build()).build();
+        when(httpClient.executeWithResponse(any(), eq(GitHubRepositoryGraphQlResponse.class)))
+                .thenReturn(HttpResponseEnvelope.<GitHubRepositoryGraphQlResponse>builder().statusCode(200)
+                        .headers(Map.of()).body(responseBody).build());
+
+        var response = githubServiceClient.fetchRepository("token-not-to-log".toCharArray(), GitHubRepositoryRequest.builder()
+                .query(GitHubRepositoryRequest.QUERY).variables(Map.of("owner", "owner", "name", "easy-fintrack"))
+                .expectedOwner("owner").expectedName("easy-fintrack").build());
+
+        var request = ArgumentCaptor.forClass(com.samsepiol.library.http.request.ApiRequest.class);
+        verify(httpClient).executeWithResponse(request.capture(), eq(GitHubRepositoryGraphQlResponse.class));
+        assertThat(request.getValue().getApi()).isEqualTo(GithubServiceClient.Constants.CONTRIBUTION_CALENDAR);
+        assertThat(request.getValue().getHeaders()).containsEntry("Authorization", "Bearer token-not-to-log")
+                .containsEntry("Content-Type", "application/json");
+        var body = (GitHubRepositoryRequest) request.getValue().getBody();
+        assertThat(body.getQuery()).contains("repository", "isPrivate", "visibility", "stargazerCount", "committedDate", "latestRelease")
+                .doesNotContain("issues", "pullRequests", "assignableUsers", "collaborators");
+        assertThat(body.getVariables()).containsExactlyEntriesOf(Map.of("owner", "owner", "name", "easy-fintrack"));
+        assertThat(response.isSuccessful()).isTrue();
+        assertThat(response.getRepository()).isEqualTo(repository);
+    }
 }
