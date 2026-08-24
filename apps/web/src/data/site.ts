@@ -13,12 +13,7 @@ export type RightNowItem = Readonly<{
   description: string;
   href: string;
   source: "curated" | "music" | "social";
-  presentation?: "link" | "spotify-player" | "photo-carousel";
-  embedUrl?: string;
-  photos?: readonly Readonly<{
-    src: string;
-    alt: string;
-  }>[];
+  presentation?: "link" | "music-link" | "photo-album";
 }>;
 
 export const siteIdentity = {
@@ -46,9 +41,8 @@ export const siteIdentity = {
 export const mustListen = {
   title: "Shaukeens",
   description:
-    "A public playlist, selected by Satyajit. Press play in Spotify or open the playlist directly.",
-  href: "https://open.spotify.com/playlist/6YwNbPTVoemt05mtYiNTNN",
-  embedUrl: "https://open.spotify.com/embed/playlist/6YwNbPTVoemt05mtYiNTNN?utm_source=generator"
+    "A public playlist, selected by Satyajit. Open it in Spotify to play it.",
+  href: "https://open.spotify.com/playlist/6YwNbPTVoemt05mtYiNTNN"
 } as const;
 
 export const rightNowItems = [
@@ -63,37 +57,14 @@ export const rightNowItems = [
     description: "On Repeat — a rolling trace of the songs that keep surviving the skip button.",
     href: "https://open.spotify.com/playlist/37i9dQZF1Epg41WGRDMFWq?si=-0ZQIBuwTa-DEo5TMFFnvQ&utm_source=copy-link&pi=eZPwWQnCRaWdt",
     source: "music",
-    presentation: "spotify-player",
-    embedUrl: "https://open.spotify.com/embed/playlist/37i9dQZF1Epg41WGRDMFWq?utm_source=generator"
+    presentation: "music-link"
   },
   {
     title: "Aero India '23",
     description: "A Bengaluru flightline field note: metal, lift, and machines built to negotiate with gravity.",
     href: "https://photos.app.goo.gl/GPD5L6yLHqgWT7Wf9",
     source: "social",
-    presentation: "photo-carousel",
-    photos: [
-      {
-        src: "https://lh3.googleusercontent.com/pw/AP1GczPYYy0UnPuDdaSoFK7F2skoVd4mEDqa6prGRA3b-r7IxUIIx_CTgAi41ArW2IxhCKCS7NGMVkfBbWXKlfhcx0uxn_DpzW-Tc98guUzRB8h4QHkcJy7B=w1600-h900",
-        alt: "Aero India exhibition entrance signage"
-      },
-      {
-        src: "https://lh3.googleusercontent.com/pw/AP1GczPuC2fwYkl1Cd1ay-uLeMS79LnKzJoURwgXvedRViIKyhx5gUc0pCp1mBmbVT6J47it_sjON1Nx7WjV7PpnascusHFvAFwTWg1flMBBT-hUIHyGeV9c=w1200-h1600",
-        alt: "Aero India venue approach with gardens and flags"
-      },
-      {
-        src: "https://lh3.googleusercontent.com/pw/AP1GczO71Y9ICRPl2NaldTfbmF_ZTpR0v_ecrsxNKjSDKBefAwl3lItIg3_APiJ9vVhOku_2iFpQGHPtddR4RlbJL4mXVmXHfQG1ZM1DRWSS5JVkq3MPCjjI=w1600-h900",
-        alt: "Aircraft exhibit at Aero India"
-      },
-      {
-        src: "https://lh3.googleusercontent.com/pw/AP1GczONegUMagjqCUrSaltc7kuRWpdIGTgzacMzwNBKY9-kxWhI8lv4p17AZN7UllOPx49SFdsx9eMlpuUGooYEqZULAaVer8MC3731OX7OYaCSeA0lA8LR=w1600-h900",
-        alt: "Aviation display at Aero India"
-      },
-      {
-        src: "https://lh3.googleusercontent.com/pw/AP1GczMGYeAD0AEy2zQezVf5BbPDR900NZrWj8E5bHa6hkhv2ZwSlxrZ9j8X0M91Z6p-yzp4LfskE9lQ3rnLrWn1rUwP4hB40rJbuWsT2A_NOIArpLUR3xnj=w1600-h900",
-        alt: "Military equipment exhibit at Aero India"
-      }
-    ]
+    presentation: "photo-album"
   }
 ] as const satisfies readonly RightNowItem[];
 

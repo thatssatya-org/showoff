@@ -150,10 +150,10 @@ Curated project narrative is authoritative. Repository provenance is optional en
 | `IdentityMasthead` | name, identity line, avatar, social links, subscribe destination | semantic `header`; labelled links; no icon-only controls |
 | `SignalMast` | static source categories and enabled capability descriptors | visual provenance only; no private/live state |
 | `MustListenCard` | approved feature title, creator, cover, destination | image alt text; Spotify deep link only; never embeds player |
-| `RightNowCollection` | ordered approved cards | no invented thumbnails; expired entries are absent |
+| `RightNowCollection` | ordered approved cards | no invented thumbnails; expired entries are absent; photo previews render only from a same-origin cached snapshot, otherwise the canonical album deep link remains |
 | `ProjectCard`/`ProjectGrid` | bounded selected-work model plus optional repository provenance | manual narrative wins over repository popularity; enrichment requires exact identifier match |
 | `ActivityTimeline` | grouped cached GitHub events | group noisy commits; source/refreshed metadata |
-| `MusicCard` | typed approved snapshot | omit if `null`; no playback control/current-listening claim |
+| `MusicCard` | typed approved snapshot | omit if `null`; no playback/current-listening claim. A labelled Spotify deep link is permitted; in-page playback is deferred. |
 | `SocialPostGrid` | selected cached cards | thumbnail/caption excerpt/date/permalink; no social embed scripts |
 | `HomelabSummary` | allow-listed delayed aggregate | no hostnames, ports, raw health, exact resources, or private URL |
 | `NewsletterForm` | consent copy/version | progressive validation, accessible errors, no PII echo/logging |

@@ -3,10 +3,9 @@ interface Props {
   title: string;
   description: string;
   href: string;
-  embedUrl: string;
 }
 
-const { title, description, href, embedUrl } = Astro.props;
+const { title, description, href } = Astro.props;
 ---
 
 <article class="must-listen card card-reveal" data-source="music">
@@ -16,16 +15,9 @@ const { title, description, href, embedUrl } = Astro.props;
       <p class="section-label">Must listen · Spotify playlist</p>
       <h2>{title}</h2>
     </div>
-    <a class="open-link" href={href} rel="external">Open ↗</a>
+    <a class="open-link" href={href} rel="external">Play in Spotify ↗</a>
   </header>
   <p class="must-listen__description">{description}</p>
-  <iframe
-    class="spotify-player"
-    src={embedUrl}
-    title={`Spotify playlist: ${title}`}
-    loading="lazy"
-    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-  ></iframe>
 </article>
 
 <style>
@@ -78,12 +70,8 @@ const { title, description, href, embedUrl } = Astro.props;
     text-decoration: none;
   }
 
-  .spotify-player {
-    display: block;
-    width: 100%;
-    height: 352px;
-    margin-top: 1rem;
-    border: 0;
-    border-radius: 0.75rem;
+  @media (max-width: 440px) {
+    .must-listen__header { grid-template-columns: auto minmax(0, 1fr); }
+    .open-link { grid-column: 2; justify-self: start; }
   }
 </style>
