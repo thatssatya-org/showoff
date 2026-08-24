@@ -228,7 +228,7 @@ No frontend test uses a real vendor token, real email address, private social me
 2. Add token/theme/font infrastructure, semantic shell, skip link, signal mast, static content schemas, and all static routes.
 3. Implement identity, link hub migration components, must-listen, right-now, projects, homelab-safe story, and newsletter static form shell using typed content.
 4. Add generated-client integration seam, development fixtures, generic capability registry, 204/null behaviour, and source metadata.
-5. Add newsletter POST with full state/error/accessibility tests.
+5. Defer the newsletter POST and its full state/error/accessibility tests to Phase 5 production promotion, after the public sender domain and self-hosted delivery configuration are approved.
 6. Add visual/accessibility/performance checks and remove any unapproved remote resource.
 
 The frontend must run with only static/development fixtures while backend credentials are absent. It must not wait for social approval or an API connection to become reviewable.
