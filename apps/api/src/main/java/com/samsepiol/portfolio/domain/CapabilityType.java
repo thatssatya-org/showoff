@@ -8,6 +8,7 @@ import java.util.Optional;
 
 public enum CapabilityType {
     GITHUB_ACTIVITY(ProviderType.GITHUB, ComponentType.ACTIVITY_TIMELINE),
+    GITHUB_CONTRIBUTIONS(ProviderType.GITHUB, ComponentType.CONTRIBUTION_HEATMAP),
     GITHUB_REPOSITORIES(ProviderType.GITHUB, ComponentType.REPOSITORY_GRID),
     SPOTIFY_ON_REPEAT(ProviderType.SPOTIFY, ComponentType.MUSIC_CARD),
     INSTAGRAM_MEDIA(ProviderType.INSTAGRAM, ComponentType.SOCIAL_GRID),

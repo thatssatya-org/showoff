@@ -454,6 +454,82 @@ button {
 
 .capability-card__empty { margin: 0; padding: 1.25rem 1.15rem; color: var(--muted); }
 
+.contribution-heatmap {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1.15rem;
+}
+
+.contribution-heatmap__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.45rem 0.7rem;
+}
+
+.contribution-heatmap__summary strong {
+  font-family: var(--font-display);
+  font-size: clamp(2.2rem, 6vw, 3.4rem);
+  font-variation-settings: "CASL" 0.25, "wght" 730;
+  font-weight: 730;
+  letter-spacing: -0.06em;
+  line-height: 0.8;
+}
+
+.contribution-heatmap__summary span,
+.contribution-heatmap__privacy {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.contribution-heatmap__privacy {
+  max-width: 46rem;
+  margin: 0;
+  border-left: 2px solid var(--accent);
+  padding-left: 0.7rem;
+}
+
+.contribution-heatmap__calendar {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(7, minmax(0, 1fr));
+  grid-auto-columns: minmax(0.5rem, 1fr);
+  gap: 0.22rem;
+  overflow-x: auto;
+  padding-block: 0.2rem;
+}
+
+.contribution-heatmap__day {
+  display: block;
+  aspect-ratio: 1;
+  min-width: 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 0.1rem;
+  background: color-mix(in srgb, var(--line) 72%, transparent);
+}
+
+.contribution-heatmap__day--1 { background: color-mix(in srgb, var(--signal) 27%, var(--surface)); }
+.contribution-heatmap__day--2 { background: color-mix(in srgb, var(--signal) 48%, var(--surface)); }
+.contribution-heatmap__day--3 { background: color-mix(in srgb, var(--signal) 70%, var(--surface)); }
+.contribution-heatmap__day--4 { background: var(--signal); }
+
+.contribution-heatmap__legend {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.28rem;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.contribution-heatmap__legend .contribution-heatmap__day {
+  width: 0.66rem;
+  min-width: 0.66rem;
+}
+
 .capability-card__footer {
   display: flex;
   flex-wrap: wrap;
@@ -526,6 +602,8 @@ button {
 @media (max-width: 480px) {
   .capability-card__header { padding: 1rem; }
   .capability-card__activity { padding-inline: 1rem; }
+  .contribution-heatmap { padding: 1rem; }
+  .contribution-heatmap__calendar { grid-auto-columns: 0.56rem; }
   .activity-day li { grid-template-columns: 1fr; gap: 0.1rem; padding-block: 0.6rem; }
   .capability-card__footer { padding-inline: 1rem; }
 }

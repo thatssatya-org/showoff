@@ -40,8 +40,24 @@ function isCapabilityDescriptor(value: unknown): value is CapabilityDescriptor {
 }
 
 export async function fetchOptionalCapability<T>(endpoint: string, signal?: AbortSignal): Promise<T | null> {
-  const response = await fetch(endpoint, { headers: { Accept: "application/json" }, signal });
-  if (response.status === 204) return null;
-  if (!response.ok) throw new Error(`Public capability request failed with ${response.status}`);
-  return response.json() as Promise<T>;
+  if (!endpoint.startsWith("/api/")) return null;
+
+  const controller = new AbortController();
+  const timeout = globalThis.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const abort = () => controller.abort();
+  signal?.addEventListener("abort", abort, { once: true });
+
+  try {
+    const response = await fetch(endpoint, {
+      headers: { Accept: "application/json" },
+      cache: "no-cache",
+      signal: controller.signal
+    });
+    if (response.status === 204) return null;
+    if (!response.ok) throw new Error(`Public capability request failed with ${response.status}`);
+    return response.json() as Promise<T>;
+  } finally {
+    globalThis.clearTimeout(timeout);
+    signal?.removeEventListener("abort", abort);
+  }
 }

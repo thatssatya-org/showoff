@@ -22,4 +22,8 @@ public class GitHubRefreshProperties {
     private String handle;
     @NotBlank
     private String cron;
+    @NotBlank
+    private String contributionCron;
+    @NotNull
+    private Boolean privateContributionDisclosureApproved;
 }

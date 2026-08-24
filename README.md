@@ -122,3 +122,18 @@ returns `204`; an empty token submission returns `400`, not `403`.
 GitHub snapshot persistence uses BSON `Long` epoch-millisecond fields
 (`refreshedAtEpochMillis` and `validUntilEpochMillis`) to avoid Java-Time codec
 coupling. Public capability responses continue to expose ISO-8601 timestamps.
+
+### Enable the contribution heat map
+
+The calendar remains absent by default. After explicitly approving anonymous
+private-contribution disclosure, set the following untracked `.env` value and
+rebuild the API:
+
+```dotenv
+PORTFOLIO_GITHUB_REFRESH_PRIVATE_CONTRIBUTION_DISCLOSURE_APPROVED=true
+```
+
+The public cache contains only a calendar day, its contribution count, and the
+annual total. It never publishes private repository, organisation, event, or
+revision metadata. The card labels the aggregate as including anonymous private
+contributions.

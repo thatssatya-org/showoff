@@ -1,0 +1,34 @@
+package com.samsepiol.portfolio.repository;
+
+import com.mongodb.client.model.Projections;
+import com.samsepiol.library.mongo.Repository;
+import com.samsepiol.portfolio.domain.CapabilityType;
+import com.samsepiol.portfolio.repository.entity.ExternalSnapshotEntity;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import org.bson.conversions.Bson;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+
+import static com.mongodb.client.model.Filters.and;
+import static com.mongodb.client.model.Filters.eq;
+
+@org.springframework.stereotype.Repository
+@ConditionalOnProperty(prefix = "spring.data.mongodb", name = "uri")
+@RequiredArgsConstructor
+public class GitHubContributionSnapshotRepository {
+    private static final Bson REFRESH_PROJECTION = Projections.fields(Projections.include("capability", "profileId",
+            "state", "title", "sourceLabel", "refreshedAtEpochMillis", "validUntilEpochMillis", "content", "publicApproved",
+            "profileEnabled", "providerEtag"), Projections.excludeId());
+    private final Repository repository;
+
+    public ExternalSnapshotEntity find(@NonNull String profileId) {
+        return repository.findOne(MongoCapabilitySnapshotReadRepository.COLLECTION,
+                and(eq("capability", CapabilityType.GITHUB_CONTRIBUTIONS), eq("profileId", profileId)),
+                REFRESH_PROJECTION, ExternalSnapshotEntity.class);
+    }
+
+    public void replace(@NonNull ExternalSnapshotEntity snapshot) {
+        repository.upsert(MongoCapabilitySnapshotReadRepository.COLLECTION, snapshot,
+                and(eq("capability", snapshot.getCapability()), eq("profileId", snapshot.getProfileId())));
+    }
+}
