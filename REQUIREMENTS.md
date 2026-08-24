@@ -341,8 +341,7 @@ Every collection has an explicit ID prefix, a schema version, retention policy, 
 - [x] Initial dynamic-integration scope is GitHub only. Spotify, Instagram, LinkedIn, and YouTube remain curated/manual links until separately approved.
 - [x] GitHub presentation scope is approved: profile `thatssatya`; eight-event public-only timeline with newest/oldest sorting; public Easy Fintrack enrichment; and a GitHub-style anonymous private-contribution heat map/total. File Nexus stays owner-authored despite its approved repository link.
 - [x] GitHub authentication uses a fine-grained PAT stored only as a versioned encrypted MongoDB envelope. It is supplied through a Tailnet-restricted write-only management `POST` and is decrypted only by the internal GitHub sync path.
-- [x] Newsletter is deferred. Hide subscription controls and collect no email addresses until the owner approves a public sender domain and self-hosted delivery configuration.
-- [ ] Approve a public mail domain and sender identity before enabling the newsletter.
+- [x] Newsletter is deferred to Phase 5. Hide subscription controls and collect no email addresses until the owner approves a public sender domain and self-hosted delivery configuration as part of production promotion.
 
 ### Phase 1 — static portfolio foundation
 
@@ -354,7 +353,7 @@ Every collection has an explicit ID prefix, a schema version, retention policy, 
 
 1. Build the generic provider-profile/capability registry, capability-manifest API, and GitHub Strategy adapter with Mongo snapshots, indexes, projections, ETags, conservative refresh intervals, and owner-curation overrides. Its publication projection exposes eight public events and Easy Fintrack enrichment only; the private-contribution projection is calendar/total-only with no private repository/event metadata.
 2. Use the installed local `samsepiol-library:0.0.4-LIBRARY-SNAPSHOT` `token-management` module for local development only. It owns versioned Mongo token envelopes, encryption/decryption, token persistence, and the default-deny management-authorization boundary; application-level `Cipher`/AES-GCM code, token persistence, or ad-hoc bearer guard is prohibited. The Showoff management endpoint accepts only `{ "token": "…" }`; it constructs the token reference, AAD, key ID, and management identity server-side. Expose no credential read endpoint, and let only the scheduled/internal GitHub adapter invoke the library’s callback-only plaintext use path for official GitHub calls. Replace this exception with a released BOM-governed dependency pair before promoting an image.
-3. Build GitHub as the only initial dynamic capability. Defer Listmonk, its sender configuration, and all newsletter data collection until a public mail domain is approved.
+3. Build GitHub as the only initial dynamic capability. Defer Listmonk, its sender configuration, and all newsletter data collection to Phase 5 production promotion.
 4. Launch with static/site-content and GitHub only if all checks pass.
 
 ### GitHub adapter local snapshot contract
@@ -390,6 +389,7 @@ Rate-limit parsing, retry policy, quota persistence, and rate-limit-aware schedu
 1. Replace local snapshot dependencies with released BOM-governed artifacts before promoting an image.
 2. Add rate-limit parsing, quota persistence, retry policy, and rate-limit-aware scheduling to the dedicated shared-library rate-limit module only if the current conservative refresh intervals cease to provide sufficient headroom. Do not add an application-side substitute.
 3. Add CI hardening—secret, dependency, image, and SAST scanning; unit/integration tests; OpenAPI compatibility; and container health checks—when the service moves beyond the current Tailnet-proxied local deployment or is prepared for promotion.
+4. Approve a public mail domain and sender identity, then configure the self-hosted Listmonk delivery path, double opt-in, unsubscribe handling, and consent/PII-log verification before enabling newsletter collection.
 
 ## 11. Definition of done / acceptance criteria
 

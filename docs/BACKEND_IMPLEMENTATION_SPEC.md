@@ -36,7 +36,7 @@ Library module artifacts: library-core, library-application, repository-models,
 Reference implementation: thatssatya-org/file-nexus
 ```
 
-The public repository audit on 2026-08-23 found BOM `0.0.5-BOM-SNAPSHOT` declaring Java 21 and Spring Boot 3.3.4, while the library root was `0.0.4-LIBRARY-SNAPSHOT`. Showoff has a narrow local-development exception: it may resolve those already-installed snapshot coordinates for local builds and local Compose verification. The exception is not a release version, must not be published to a remote repository, and must be replaced by a released BOM-governed pair before an image is promoted. The API uses the Java/Spring level dictated by the selected BOM. A Java 25/Spring upgrade belongs in a BOM release first.
+The public repository audit on 2026-08-23 found BOM `0.0.5-BOM-SNAPSHOT` declaring Java 21 and Spring Boot 3.3.4, while the library root was `0.0.4-LIBRARY-SNAPSHOT`. Showoff has a narrow local-development exception: it may resolve those already-installed snapshot coordinates for local builds and local Compose verification. The exception is not a release version, must not be published to a remote repository, and must be replaced by a released BOM-governed pair during Phase 5 production promotion. The API uses the Java/Spring level dictated by the selected BOM. A Java 25/Spring upgrade belongs in a BOM release first.
 
 ### 2.2 Required project layout
 
