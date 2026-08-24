@@ -126,16 +126,24 @@ The capability manifest omits unavailable/disabled cards. An explicit capability
 Use a closed, typed registry. Example conceptual mapping:
 
 ```text
-MUSIC_CARD          → MusicCard
-ACTIVITY_TIMELINE   → ActivityTimeline
-REPOSITORY_GRID     → RepositoryGrid
-SOCIAL_GRID         → SocialPostGrid
-HOMELAB_SUMMARY     → HomelabSummary
+MUSIC_CARD           → MusicCard
+ACTIVITY_TIMELINE    → ActivityTimeline
+CONTRIBUTION_HEATMAP → ContributionHeatmap
+SOCIAL_GRID          → SocialPostGrid
+HOMELAB_SUMMARY      → HomelabSummary
 ```
 
 Unknown component types are ignored with a development-only diagnostic. They must not cause a runtime exception or block surrounding cards. Add a component only when the capability needs a materially different visual grammar; otherwise reuse an existing card.
 
-### 4.3 Required components
+`REPOSITORY_GRID` is intentionally not a standalone capability card. The selected-work island resolves that descriptor only once, validates the bounded repository snapshot, and renders compact provenance inside a curated project card only when the snapshot repository exactly equals its `publicRepository` identifier. Missing, invalid, failed, or mismatched enrichment renders nothing and never changes the project narrative.
+
+### 4.3 SelectedWork API contract and migration
+
+The future backend-selected-work response must be a bounded presentation contract that the frontend renders directly. Each item contains the curated fields represented by the current project schema: `title`, `summary`, `projectSlug`, `visible`, `order`, `externalUrl?`, `publicRepository?`, `sourceLabel`, `imageAlt?`, `expiresAt?`, `stack`, and the owner-authored case-study body (or an equivalent safe structured narrative). The backend preserves editorial ordering and visibility; the frontend does not re-rank work from stars, activity, or provider popularity.
+
+Curated project narrative is authoritative. Repository provenance is optional enrichment keyed only by exact `publicRepository` equality and limited to the approved public snapshot fields: repository identifier, HTTPS GitHub URL, language, stars, optional release metadata, and cache timestamp/state. The SelectedWork API must not expose or pass through GitHub GraphQL/REST responses, provider-specific DTOs, tokens, private repository data, or other remote-provider payloads. During migration, replace the content-collection load with this response without changing the card contract; retain the current static content as the failure-safe publication source until backend ownership and fallback behaviour are explicitly approved.
+
+### 4.4 Required components
 
 | Component | Inputs | Rules |
 | --- | --- | --- |
@@ -143,7 +151,7 @@ Unknown component types are ignored with a development-only diagnostic. They mus
 | `SignalMast` | static source categories and enabled capability descriptors | visual provenance only; no private/live state |
 | `MustListenCard` | approved feature title, creator, cover, destination | image alt text; Spotify deep link only; never embeds player |
 | `RightNowCollection` | ordered approved cards | no invented thumbnails; expired entries are absent |
-| `ProjectCard`/`ProjectGrid` | content-collection project model | manual outcome wins over repository popularity |
+| `ProjectCard`/`ProjectGrid` | bounded selected-work model plus optional repository provenance | manual narrative wins over repository popularity; enrichment requires exact identifier match |
 | `ActivityTimeline` | grouped cached GitHub events | group noisy commits; source/refreshed metadata |
 | `MusicCard` | typed approved snapshot | omit if `null`; no playback control/current-listening claim |
 | `SocialPostGrid` | selected cached cards | thumbnail/caption excerpt/date/permalink; no social embed scripts |

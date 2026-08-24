@@ -1,5 +1,6 @@
 ---
 import type { CollectionEntry } from "astro:content";
+import RepositoryProvenance from "./RepositoryProvenance";
 
 interface Props {
   projects: readonly CollectionEntry<"projects">[];
@@ -19,6 +20,7 @@ const { projects, compact = false } = Astro.props;
         <ul aria-label={`${project.data.title} technology`}>
           {project.data.stack.map((technology) => <li>{technology}</li>)}
         </ul>
+        {project.data.publicRepository && <RepositoryProvenance publicRepository={project.data.publicRepository} client:load />}
         <a class="project-card__read" href={`/projects/${project.data.projectSlug}`}>Read field note</a>
       </article>
     ))
@@ -35,5 +37,11 @@ const { projects, compact = false } = Astro.props;
   ul { display: flex; flex-wrap: wrap; gap: 0.45rem; margin: 0; padding: 0; list-style: none; }
   li { border: 1px solid var(--line); border-radius: 999px; padding: 0.15rem 0.45rem; font-family: var(--font-mono); font-size: 0.68rem; }
   .project-card__read { margin-top: 0.3rem; font-size: 0.9rem; }
+  :global(.project-card__provenance) { display: grid; gap: 0.4rem; border-top: 1px solid var(--line); padding-top: 0.7rem; font-family: var(--font-mono); font-size: 0.68rem; }
+  :global(.project-card__source) { width: fit-content; overflow-wrap: anywhere; font-weight: 500; }
+  :global(.project-card__provenance dl) { display: flex; flex-wrap: wrap; gap: 0.35rem 0.8rem; margin: 0; color: var(--muted); }
+  :global(.project-card__provenance dl div) { display: flex; gap: 0.3rem; }
+  :global(.project-card__provenance dt::after) { content: ":"; }
+  :global(.project-card__provenance dd) { margin: 0; color: var(--ink); }
   @media (min-width: 720px) { .project-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .project-grid--compact { grid-template-columns: 1fr; } }
 </style>
