@@ -339,11 +339,11 @@ Every collection has an explicit ID prefix, a schema version, retention policy, 
 
 1. Scaffold Astro frontend and Spring Boot API as separate apps in this repository. The backend imports `samsepiol-bom` and consumes released `samsepiol-library` modules before any portfolio feature code is added.
 2. Implement the semantic homepage, projects, now, uses, privacy, RSS/sitemap/JSON-LD, theme, and accessibility/performance budgets.
-3. Add Docker Compose for local development and production, MongoDB with the library codec configuration, reverse-proxy configuration, health checks, backups, CI, and a staging hostname. Keep Listmonk and its mandated PostgreSQL data volume on an internal-only network.
+3. Add Docker Compose for local development and production, MongoDB with the library codec configuration, reverse-proxy configuration, local health checks, backups, and a staging hostname. Keep Listmonk and its mandated PostgreSQL data volume on an internal-only network.
 
 ### Phase 2 — first-party data and GitHub
 
-1. Build the generic provider-profile/capability registry, capability-manifest API, and GitHub Strategy adapter with Mongo snapshots, indexes, projections, ETags, rate-limit handling, and owner-curation overrides. Its publication projection exposes eight public events and Easy Fintrack enrichment only; the private-contribution projection is calendar/total-only with no private repository/event metadata.
+1. Build the generic provider-profile/capability registry, capability-manifest API, and GitHub Strategy adapter with Mongo snapshots, indexes, projections, ETags, conservative refresh intervals, and owner-curation overrides. Its publication projection exposes eight public events and Easy Fintrack enrichment only; the private-contribution projection is calendar/total-only with no private repository/event metadata.
 2. Use the installed local `samsepiol-library:0.0.4-LIBRARY-SNAPSHOT` `token-management` module for local development only. It owns versioned Mongo token envelopes, encryption/decryption, token persistence, and the default-deny management-authorization boundary; application-level `Cipher`/AES-GCM code, token persistence, or ad-hoc bearer guard is prohibited. The Showoff management endpoint accepts only `{ "token": "…" }`; it constructs the token reference, AAD, key ID, and management identity server-side. Expose no credential read endpoint, and let only the scheduled/internal GitHub adapter invoke the library’s callback-only plaintext use path for official GitHub calls. Replace this exception with a released BOM-governed dependency pair before promoting an image.
 3. Build GitHub as the only initial dynamic capability. Defer Listmonk, its sender configuration, and all newsletter data collection until a public mail domain is approved.
 4. Launch with static/site-content and GitHub only if all checks pass.
@@ -352,7 +352,7 @@ Every collection has an explicit ID prefix, a schema version, retention policy, 
 
 The locally installed `http:0.0.4-LIBRARY-SNAPSHOT` now exposes `HttpResponseEnvelope` through `HttpClient.executeWithResponse(...)`: a single-consumption, bounded body with status and normalized headers. Its per-API request and response diagnostics are disabled by default; when enabled, credential headers are omitted, common JSON secret fields are redacted, and diagnostic payloads are truncated. Showoff uses this contract only in the disabled-by-default scheduled GitHub public-events refresh. It sends `If-None-Match`, persists GitHub's `ETag`, treats `304 Not Modified` as no replacement, and retains the last known good snapshot on any upstream error. No visitor route can trigger this call, and no `WebClient`, vendor SDK, or direct HTTP client is permitted.
 
-Rate-limit parsing, retry policy, quota persistence, and rate-limit-aware scheduling are deliberately deferred. They belong in a separate shared-library rate-limit module; this HTTP client and Showoff contain no app-side substitute.
+Rate-limit parsing, retry policy, quota persistence, and rate-limit-aware scheduling are final-phase technical debt. They belong in a separate shared-library rate-limit module; this HTTP client and Showoff contain no app-side substitute. The current conservative refresh intervals are sufficient, so this work does not gate the GitHub capability.
 
 #### GitHub local delivery status — 2026-08-23
 
@@ -361,7 +361,6 @@ Rate-limit parsing, retry policy, quota persistence, and rate-limit-aware schedu
 - [x] Local Compose deployment verified with the API and web gateway healthy; GitHub refresh remains disabled until operator credentials and explicit profile approval are configured.
 - [x] GraphQL contribution calendar/total public projection: cached anonymous day/count calendar and total only, with explicit private-contribution disclosure approval; no private repository or event metadata is persisted or emitted.
 - [x] Easy Fintrack enrichment: cached GitHub GraphQL projection of the explicitly configured public repository only (name, URL, stars, primary language, default-branch commit timestamp, and optional release metadata); private, mismatched, or incomplete responses are rejected and File Nexus remains owner-authored.
-- [ ] Rate-limit parsing, quota persistence, retry policy, and rate-limit-aware scheduling in the dedicated shared-library rate-limit module.
 - [ ] Replace local snapshot dependencies with released BOM-governed artifacts before promotion.
 
 ### Phase 3 — selected media integrations
@@ -375,6 +374,12 @@ Rate-limit parsing, retry policy, quota persistence, and rate-limit-aware schedu
 1. Define and approve the aggregate homelab schema and diagram. The initial public schema is intentionally empty; metrics are deferred from v1.
 2. Implement the backend-local cron-scheduled collector on the Tailnet-connected host. It must construct one validated, allow-listed unified JSON snapshot, persist a delayed cache, and expose it through `/api/v1/homelab/summary`; no visitor request may run the collector. If extraction moves to a separate process, add signed replay-protected private ingestion.
 3. Add a Tailnet-only operations interface/CLI, provider token-expiry alerts, Temporal-backed durable workflows for external/Mongo coordination, restore drill, and incident runbooks.
+
+### Phase 5 — promotion hardening and technical debt
+
+1. Replace local snapshot dependencies with released BOM-governed artifacts before promoting an image.
+2. Add rate-limit parsing, quota persistence, retry policy, and rate-limit-aware scheduling to the dedicated shared-library rate-limit module only if the current conservative refresh intervals cease to provide sufficient headroom. Do not add an application-side substitute.
+3. Add CI hardening—secret, dependency, image, and SAST scanning; unit/integration tests; OpenAPI compatibility; and container health checks—when the service moves beyond the current Tailnet-proxied local deployment or is prepared for promotion.
 
 ## 11. Definition of done / acceptance criteria
 
