@@ -24,6 +24,14 @@ public class GitHubRefreshProperties {
     private String cron;
     @NotBlank
     private String contributionCron;
+    @NotBlank
+    private String repositoryCron;
+    @NotBlank
+    @Pattern(regexp = "[A-Za-z0-9-]{1,39}")
+    private String repositoryOwner;
+    @NotBlank
+    @Pattern(regexp = "[A-Za-z0-9._-]{1,100}")
+    private String repositoryName;
     @NotNull
     private Boolean privateContributionDisclosureApproved;
 }

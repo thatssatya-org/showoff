@@ -360,7 +360,7 @@ Rate-limit parsing, retry policy, quota persistence, and rate-limit-aware schedu
 - [x] Local HTTP snapshot integration with disabled-by-default redacted diagnostics, bounded responses, ETag persistence, conditional requests, `304` no-write handling, and last-known-good public-event snapshots.
 - [x] Local Compose deployment verified with the API and web gateway healthy; GitHub refresh remains disabled until operator credentials and explicit profile approval are configured.
 - [x] GraphQL contribution calendar/total public projection: cached anonymous day/count calendar and total only, with explicit private-contribution disclosure approval; no private repository or event metadata is persisted or emitted.
-- [ ] Easy Fintrack enrichment after its public projection is reviewed.
+- [x] Easy Fintrack enrichment: cached GitHub GraphQL projection of the explicitly configured public repository only (name, URL, stars, primary language, default-branch commit timestamp, and optional release metadata); private, mismatched, or incomplete responses are rejected and File Nexus remains owner-authored.
 - [ ] Rate-limit parsing, quota persistence, retry policy, and rate-limit-aware scheduling in the dedicated shared-library rate-limit module.
 - [ ] Replace local snapshot dependencies with released BOM-governed artifacts before promotion.
 

@@ -39,4 +39,7 @@ portfolio:
     handle: replace-me
     cron: "0 */15 * * * *"
     contribution-cron: "0 5 0 * * *"
+    repository-cron: "0 20 * * * *"
+    repository-owner: replace-me
+    repository-name: replace-me
     private-contribution-disclosure-approved: false

@@ -137,3 +137,18 @@ The public cache contains only a calendar day, its contribution count, and the
 annual total. It never publishes private repository, organisation, event, or
 revision metadata. The card labels the aggregate as including anonymous private
 contributions.
+
+### Enable Easy Fintrack enrichment
+
+The public repository card remains absent until GitHub activity is approved and
+the operator sets the single approved public repository in the untracked `.env`:
+
+```dotenv
+PORTFOLIO_GITHUB_REFRESH_REPOSITORY_OWNER=thatssatya-org
+PORTFOLIO_GITHUB_REFRESH_REPOSITORY_NAME=easyfintrack
+```
+
+The scheduled cache stores only the public repository name, URL, star count,
+primary language, default-branch commit timestamp, and release metadata. The
+adapter rejects a private, mismatched, or incomplete repository response; File
+Nexus remains owner-authored content and is never fetched through GitHub.

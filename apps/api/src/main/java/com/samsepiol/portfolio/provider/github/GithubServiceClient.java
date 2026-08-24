@@ -7,6 +7,8 @@ public interface GithubServiceClient {
 
     GitHubContributionFetchResponse fetchContributionCalendar(char[] token, GitHubContributionCalendarRequest request);
 
+    GitHubRepositoryFetchResponse fetchRepository(char[] token, GitHubRepositoryRequest request);
+
     @UtilityClass
     class Constants {
         public static final String SERVICE = "github";
