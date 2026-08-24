@@ -2,12 +2,10 @@ package com.samsepiol.portfolio.provider.github;
 
 import lombok.experimental.UtilityClass;
 
-import java.time.Instant;
-
 public interface GithubServiceClient {
     GitHubActivityFetchResponse fetchPublicEvents(char[] token, String etag);
 
-    GitHubContributionFetchResponse fetchContributionCalendar(char[] token, String expectedHandle, Instant from, Instant to);
+    GitHubContributionFetchResponse fetchContributionCalendar(char[] token, GitHubContributionCalendarRequest request);
 
     @UtilityClass
     class Constants {

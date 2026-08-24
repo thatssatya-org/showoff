@@ -12,6 +12,7 @@ import com.samsepiol.portfolio.domain.CapabilityState;
 import com.samsepiol.portfolio.domain.CapabilityType;
 import com.samsepiol.portfolio.domain.PublicCapabilitySnapshot;
 import com.samsepiol.portfolio.provider.github.GithubServiceClient;
+import com.samsepiol.portfolio.provider.github.GitHubContributionCalendarRequest;
 import com.samsepiol.portfolio.repository.GitHubContributionSnapshotRepository;
 import com.samsepiol.portfolio.repository.entity.ExternalSnapshotEntity;
 import lombok.NonNull;
@@ -31,6 +32,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public final class GitHubContributionSnapshotStrategy implements CapabilitySnapshotStrategy {
     private static final TokenReference TOKEN_REFERENCE = new TokenReference("portfolio", "github", "personal-access-token");
+    private static final Map<String, String> EMPTY_CONTENT = Map.of();
     private static final ManagementAuthorizationRequest INTERNAL_AUTHORIZATION = ManagementAuthorizationRequest.builder()
             .principalId("github-refresh-scheduler")
             .operation(GitHubTokenManagementConfiguration.GITHUB_TOKEN_USE_OPERATION)
@@ -48,10 +50,11 @@ public final class GitHubContributionSnapshotStrategy implements CapabilitySnaps
 
     @Override
     public @NonNull CapabilitySnapshotRefreshResponse refresh(@NonNull CapabilitySnapshotRefreshRequest request) {
-        if (request.getCapability() != CapabilityType.GITHUB_CONTRIBUTIONS) {
-            throw new IllegalArgumentException("GitHub contribution strategy accepts only GITHUB_CONTRIBUTIONS");
-        }
         var existing = snapshotRepository.find(refreshProperties.getProfileId());
+        if (isFresh(existing)) {
+            return CapabilitySnapshotRefreshResponse.builder()
+                    .snapshot(GitHubContributionSnapshotMapper.INSTANCE.toPublicSnapshot(existing)).build();
+        }
         var snapshot = tokenManagementService.useForInternalIntegration(storageContext(), INTERNAL_AUTHORIZATION,
                 token -> refreshWithToken(token, existing));
         return CapabilitySnapshotRefreshResponse.builder().snapshot(snapshot).build();
@@ -60,10 +63,9 @@ public final class GitHubContributionSnapshotStrategy implements CapabilitySnaps
     private PublicCapabilitySnapshot refreshWithToken(char[] token, ExternalSnapshotEntity existing) {
         try {
             var refreshedAt = Instant.ofEpochMilli(DateTimeUtils.currentEpochMillis());
-            var response = githubServiceClient.fetchContributionCalendar(token, refreshProperties.getHandle(),
-                    refreshedAt.minus(365, ChronoUnit.DAYS), refreshedAt);
+            var response = githubServiceClient.fetchContributionCalendar(token, contributionRequest(refreshedAt));
             if (!response.isSuccessful()) {
-                throw new IllegalStateException("GitHub contribution calendar response was unsuccessful");
+                throw new GitHubProviderException(GitHubProviderError.UNSUCCESSFUL_CONTRIBUTION_RESPONSE);
             }
             var replacement = GitHubContributionSnapshotMapper.INSTANCE.toEntity(response, refreshProperties, refreshedAt,
                     refreshedAt.plus(1, ChronoUnit.DAYS));
@@ -79,9 +81,19 @@ public final class GitHubContributionSnapshotStrategy implements CapabilitySnaps
         return TokenStorageContext.builder().reference(TOKEN_REFERENCE).keyId(tokenProperties.keyId()).build();
     }
 
+    private boolean isFresh(ExternalSnapshotEntity snapshot) {
+        return snapshot != null && snapshot.getValidUntilEpochMillis() > DateTimeUtils.currentEpochMillis();
+    }
+
+    private GitHubContributionCalendarRequest contributionRequest(Instant refreshedAt) {
+        return GitHubContributionCalendarRequest.builder().query(GitHubContributionCalendarRequest.QUERY)
+                .variables(Map.of("from", refreshedAt.minus(365, ChronoUnit.DAYS).toString(), "to", refreshedAt.toString()))
+                .expectedHandle(refreshProperties.getHandle()).build();
+    }
+
     private PublicCapabilitySnapshot emptySnapshot() {
         return PublicCapabilitySnapshot.builder().capability(CapabilityType.GITHUB_CONTRIBUTIONS)
                 .state(CapabilityState.AWAITING_AUTHORIZATION).title("GitHub contributions").sourceLabel("GitHub")
-                .refreshedAt(Instant.EPOCH).content(Map.of()).build();
+                .refreshedAt(Instant.EPOCH).content(EMPTY_CONTENT).build();
     }
 }

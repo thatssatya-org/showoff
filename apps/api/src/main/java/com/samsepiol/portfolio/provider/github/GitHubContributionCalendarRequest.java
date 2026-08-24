@@ -1,5 +1,6 @@
 package com.samsepiol.portfolio.provider.github;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
@@ -38,4 +39,7 @@ public class GitHubContributionCalendarRequest {
     String query;
     @NonNull
     Map<String, String> variables;
+    @NonNull
+    @JsonIgnore
+    String expectedHandle;
 }

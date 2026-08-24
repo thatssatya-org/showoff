@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.time.Instant;
 
 @Component
 @ConditionalOnProperty(prefix = "portfolio.github-refresh", name = "enabled", havingValue = "true")
@@ -36,17 +35,14 @@ public final class DefaultGithubServiceClient implements GithubServiceClient {
     }
 
     @Override
-    public GitHubContributionFetchResponse fetchContributionCalendar(char[] token, String expectedHandle, Instant from, Instant to) {
+    public GitHubContributionFetchResponse fetchContributionCalendar(char[] token, GitHubContributionCalendarRequest request) {
         var headers = authenticatedHeaders(token);
         headers.put(GithubServiceClient.Constants.CONTENT_TYPE, GithubServiceClient.Constants.APPLICATION_JSON);
         var response = httpClient.executeWithResponse(ApiRequest.builder()
                 .service(GithubServiceClient.Constants.SERVICE)
                 .api(GithubServiceClient.Constants.CONTRIBUTION_CALENDAR)
                 .headers(headers)
-                .body(GitHubContributionCalendarRequest.builder()
-                        .query(GitHubContributionCalendarRequest.QUERY)
-                        .variables(java.util.Map.of("from", from.toString(), "to", to.toString()))
-                        .build())
+                .body(request)
                 .build(), GitHubContributionGraphQlResponse.class);
         var responseBody = response.getBody();
         return GitHubContributionFetchResponse.builder()
@@ -56,7 +52,7 @@ public final class DefaultGithubServiceClient implements GithubServiceClient {
                         || responseBody.getData().getViewer().getContributionsCollection() == null
                         ? null
                         : responseBody.getData().getViewer().getContributionsCollection().getContributionCalendar())
-                .hasErrors(responseBody != null && (responseBody.hasErrors() || !responseBody.viewerMatches(expectedHandle)))
+                .hasErrors(responseBody != null && (responseBody.hasErrors() || !responseBody.viewerMatches(request.getExpectedHandle())))
                 .build();
     }
 

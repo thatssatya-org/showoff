@@ -3,23 +3,30 @@ package com.samsepiol.portfolio.provider.github;
 import com.samsepiol.library.http.client.HttpClient;
 import com.samsepiol.library.http.response.HttpResponseEnvelope;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Map;
-import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class DefaultGithubServiceClientTest {
+    @Mock
+    private HttpClient httpClient;
+    @InjectMocks
+    private DefaultGithubServiceClient githubServiceClient;
+
     @Test
     void fetchesTypedEventsWithTheStoredEtag() {
-        var httpClient = mock(HttpClient.class);
         var event = GitHubPublicEventResponse.builder().type("PushEvent").createdAt("2026-08-23T12:34:56Z")
                 .repo(GitHubRepositoryResponse.builder().name("owner/public-repo").build())
                 .build();
@@ -29,7 +36,7 @@ class DefaultGithubServiceClientTest {
                         .body(new GitHubPublicEventResponse[]{event})
                         .build());
 
-        var response = new DefaultGithubServiceClient(httpClient).fetchPublicEvents("token-not-to-log".toCharArray(), "\"prior\"");
+        var response = githubServiceClient.fetchPublicEvents("token-not-to-log".toCharArray(), "\"prior\"");
 
         var request = ArgumentCaptor.forClass(com.samsepiol.library.http.request.ApiRequest.class);
         verify(httpClient).executeWithResponse(request.capture(), eq(GitHubPublicEventResponse[].class));
@@ -41,7 +48,6 @@ class DefaultGithubServiceClientTest {
 
     @Test
     void fetchesOnlyTheContributionCalendarAggregateThroughGraphQl() {
-        var httpClient = mock(HttpClient.class);
         var contributionDay = GitHubContributionDayResponse.builder().date("2026-08-23").contributionCount(4).build();
         var calendar = GitHubContributionCalendarResponse.builder().totalContributions(4)
                 .weeks(List.of(GitHubContributionWeekResponse.builder().contributionDays(List.of(contributionDay)).build()))
@@ -59,8 +65,10 @@ class DefaultGithubServiceClientTest {
                 .thenReturn(HttpResponseEnvelope.<GitHubContributionGraphQlResponse>builder().statusCode(200)
                         .headers(Map.of()).body(responseBody).build());
 
-        var response = new DefaultGithubServiceClient(httpClient).fetchContributionCalendar("token-not-to-log".toCharArray(),
-                "octocat", Instant.parse("2025-08-24T00:00:00Z"), Instant.parse("2026-08-24T00:00:00Z"));
+        var response = githubServiceClient.fetchContributionCalendar("token-not-to-log".toCharArray(),
+                GitHubContributionCalendarRequest.builder().query(GitHubContributionCalendarRequest.QUERY)
+                        .expectedHandle("octocat").variables(Map.of("from", "2025-08-24T00:00:00Z", "to", "2026-08-24T00:00:00Z"))
+                        .build());
 
         var request = ArgumentCaptor.forClass(com.samsepiol.library.http.request.ApiRequest.class);
         verify(httpClient).executeWithResponse(request.capture(), eq(GitHubContributionGraphQlResponse.class));

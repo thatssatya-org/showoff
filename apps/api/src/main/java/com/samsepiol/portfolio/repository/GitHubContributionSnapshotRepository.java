@@ -22,10 +22,9 @@ public class GitHubContributionSnapshotRepository {
     private final Repository repository;
 
     public ExternalSnapshotEntity find(@NonNull String profileId) {
-        return repository.getCollection(MongoCapabilitySnapshotReadRepository.COLLECTION,
-                        ExternalSnapshotEntity.class)
-                .find(and(eq("capability", CapabilityType.GITHUB_CONTRIBUTIONS), eq("profileId", profileId)))
-                .projection(REFRESH_PROJECTION).limit(1).first();
+        return repository.findOne(MongoCapabilitySnapshotReadRepository.COLLECTION,
+                and(eq("capability", CapabilityType.GITHUB_CONTRIBUTIONS), eq("profileId", profileId)),
+                REFRESH_PROJECTION, ExternalSnapshotEntity.class);
     }
 
     public void replace(@NonNull ExternalSnapshotEntity snapshot) {

@@ -46,9 +46,6 @@ public final class GitHubActivitySnapshotStrategy implements CapabilitySnapshotS
 
     @Override
     public @NonNull CapabilitySnapshotRefreshResponse refresh(@NonNull CapabilitySnapshotRefreshRequest request) {
-        if (request.getCapability() != CapabilityType.GITHUB_ACTIVITY) {
-            throw new IllegalArgumentException("GitHub activity strategy accepts only GITHUB_ACTIVITY");
-        }
         var existing = snapshotRepository.find(refreshProperties.getProfileId());
         var snapshot = tokenManagementService.useForInternalIntegration(storageContext(), INTERNAL_AUTHORIZATION,
                 token -> refreshWithToken(token, existing));
@@ -63,7 +60,7 @@ public final class GitHubActivitySnapshotStrategy implements CapabilitySnapshotS
                 return existing == null ? emptySnapshot() : GitHubActivitySnapshotMapper.INSTANCE.toPublicSnapshot(existing);
             }
             if (!response.isSuccessful()) {
-                throw new IllegalStateException("GitHub returned an unsuccessful response");
+                throw new GitHubProviderException(GitHubProviderError.UNSUCCESSFUL_ACTIVITY_RESPONSE);
             }
             var refreshedAt = Instant.ofEpochMilli(DateTimeUtils.currentEpochMillis());
             var replacement = GitHubActivitySnapshotMapper.INSTANCE.toEntity(response, refreshProperties, refreshedAt,
