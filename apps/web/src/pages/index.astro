@@ -19,7 +19,7 @@ const enableLiveCapabilities = import.meta.env.PUBLIC_ENABLE_LIVE_CAPABILITIES =
 
 <BaseLayout title="Satyajit Roy — field record" description={siteIdentity.thesis}>
   <div class="frame field-layout">
-    <SignalMast enabledSources={["curated", "github"]} />
+    <SignalMast enabledSources={["curated", "github", "music", "social"]} />
     <div class="content-field">
       <IdentityMasthead {...siteIdentity} />
 
@@ -67,7 +67,7 @@ const enableLiveCapabilities = import.meta.env.PUBLIC_ENABLE_LIVE_CAPABILITIES =
 </BaseLayout>
 
 <style>
-  .feature-grid { display: grid; align-items: start; gap: 1.5rem; padding-block: 2rem; }
+  .feature-grid { display: grid; align-items: start; gap: 2rem; padding-block: 2rem; }
   .focus-strip, .home-section, .newsletter-block { padding-block: clamp(2.5rem, 6vw, 5rem); }
   .focus-strip { display: grid; gap: 1.5rem; }
   h2 { margin: 0.2rem 0 0; font-family: var(--font-display); font-size: clamp(2rem, 4.5vw, 3.5rem); letter-spacing: -0.06em; line-height: 0.92; }
@@ -77,5 +77,5 @@ const enableLiveCapabilities = import.meta.env.PUBLIC_ENABLE_LIVE_CAPABILITIES =
   .home-section__heading > a { flex-shrink: 0; }
   .newsletter-block { display: grid; gap: 1.5rem; }
   .newsletter-block > div > p:not(.section-label) { max-width: 38rem; color: var(--muted); }
-  @media (min-width: 760px) { .feature-grid { grid-template-columns: minmax(15rem, 0.75fr) minmax(0, 1.25fr); } .focus-strip, .newsletter-block { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 3rem; } }
+  @media (min-width: 760px) { .feature-grid { grid-template-columns: minmax(0, 1fr); gap: 2.5rem; } .focus-strip, .newsletter-block { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 3rem; } }
 </style>

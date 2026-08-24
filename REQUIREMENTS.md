@@ -167,6 +167,14 @@ Nothing is published merely because a vendor account or repository is discoverab
 - Optionally display recently played/top tracks only if specifically enabled. Default to no real-time “currently listening” signal.
 - Refresh the source data server-side, retain a last-good curated snapshot, and give the owner an internal toggle to hide it instantly.
 - Do not embed Spotify’s JavaScript or expose access/refresh tokens to a browser.
+- A visible “Play in Spotify” control is a deep link, not in-page playback. Native playback requires either Spotify's embed/runtime or the Web Playback SDK with browser-held OAuth tokens, a Premium account, and an active device; both conflict with the current public-browser boundary. Defer this unless those constraints are explicitly reapproved.
+
+### FR-3a: cached photo albums
+
+- A public photo card may display a bounded, owner-approved random selection only from a server-side cached snapshot. The visitor path reads same-origin responsive variants and never reaches a photo provider or starts an album refresh.
+- The refresh worker selects a new bounded set from the approved album during each scheduled refresh, validates MIME type, dimensions, byte limits, and image decode, generates responsive variants, and atomically promotes the new snapshot only after every selected item is ready. The last-known-good snapshot remains public on a refresh failure.
+- Persist only owner-approved title, alt text, source/deep link, cache timestamp, content hash, and variants. Do not retain EXIF/GPS, people/face metadata, raw provider responses, or unapproved album items. The owner can pin, hide, or revoke each item.
+- Google Photos public-album HTML is not a supported ingestion API and must not be scraped. Before implementation, use an approved source with a supported server credential path (preferred: a self-hosted photo service such as Immich, or an owner-generated signed manifest/export). Until then, render only the album deep link.
 
 ### FR-4: Instagram
 
@@ -222,7 +230,8 @@ Nothing is published merely because a vendor account or repository is discoverab
 | Source | Desired public output | Supported approach | Data freshness | Constraint / fallback |
 | --- | --- | --- | --- | --- |
 | GitHub | featured repo metadata, recent public activity, heat map | REST v3 plus GraphQL `contributionsCollection`; server token only if needed | events 15 min; repos 1 h; heat map daily | Public REST events are short-lived; contribution calendar needs GraphQL and must not leak private counts |
-| Spotify | approved On Repeat/top/recent tracks | OAuth 2.0 Authorization Code + PKCE on the server; cache a rendered snapshot | 1–6 h | Scope/production access policy may limit users; personalised On Repeat access needs a tested owner account. Fallback: curated playlist link/card |
+| Spotify | approved On Repeat/top/recent tracks | OAuth 2.0 Authorization Code + PKCE on the server; cache a rendered snapshot | 1–6 h | Scope/production access policy may limit users; personalised On Repeat access needs a tested owner account. Fallback: curated playlist link/card. No in-page playback under the current browser boundary. |
+| Photo album | bounded, owner-approved rotating selection | supported server-side source credential → scheduled cache → same-origin responsive variants | 6–24 h | Google Photos public-album pages are not scraped. Use Immich or an owner-signed manifest/export; fallback: direct album link. |
 | Instagram | recent posts/Reels | Meta Graph API for a linked Professional account and approved scopes | 6 h | No general public-profile API. Fallback: profile link + owner-pinned media |
 | LinkedIn | profile, role, selected posts | profile link plus approved official API only when access is granted | manual / 6 h | Public profile/job/post reading is restricted. Fallback: manual “now” and pinned deep links |
 | YouTube | uploads/Shorts | Data API v3 upload playlist or channel RSS | 6 h | Community posts are not a dependable standard API resource. Fallback: channel link/pinned cards |
@@ -366,8 +375,9 @@ Rate-limit parsing, retry policy, quota persistence, and rate-limit-aware schedu
 ### Phase 3 — selected media integrations
 
 1. Add Spotify OAuth and owner-approved On Repeat snapshot.
-2. Add YouTube uploads/Shorts.
-3. Add Instagram only after the account/app permissions are approved; add LinkedIn only if official access is actually granted. Otherwise retain the manual, honest fallbacks.
+2. Add a photo-album cache only after the owner selects a supported source and supplies its server-side credential/manifest. It must publish a bounded, validated, randomised cache snapshot with same-origin variants; never scrape a Google Photos album page.
+3. Add YouTube uploads/Shorts.
+4. Add Instagram only after the account/app permissions are approved; add LinkedIn only if official access is actually granted. Otherwise retain the manual, honest fallbacks.
 
 ### Phase 4 — homelab story and operations
 
