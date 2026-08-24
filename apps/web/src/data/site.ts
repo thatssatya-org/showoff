@@ -13,7 +13,14 @@ export type RightNowItem = Readonly<{
   description: string;
   href: string;
   source: "curated" | "music" | "social";
-  presentation?: "link" | "music-link" | "photo-album";
+  presentation?: "link" | "music-link" | "photo-carousel";
+  photos?: readonly Readonly<{
+    src: string;
+    srcSet: string;
+    width: number;
+    height: number;
+    alt: string;
+  }>[];
 }>;
 
 export const siteIdentity = {
@@ -64,7 +71,14 @@ export const rightNowItems = [
     description: "A Bengaluru flightline field note: metal, lift, and machines built to negotiate with gravity.",
     href: "https://photos.app.goo.gl/GPD5L6yLHqgWT7Wf9",
     source: "social",
-    presentation: "photo-album"
+    presentation: "photo-carousel",
+    photos: [
+      { src: "/media/aero-india-23/01-960.webp", srcSet: "/media/aero-india-23/01-480.webp 480w, /media/aero-india-23/01-960.webp 960w", width: 1200, height: 900, alt: "Aero India exhibition entrance signage" },
+      { src: "/media/aero-india-23/02-960.webp", srcSet: "/media/aero-india-23/02-480.webp 270w, /media/aero-india-23/02-960.webp 540w", width: 900, height: 1600, alt: "Aero India venue approach with gardens and flags" },
+      { src: "/media/aero-india-23/03-960.webp", srcSet: "/media/aero-india-23/03-480.webp 480w, /media/aero-india-23/03-960.webp 960w", width: 1200, height: 900, alt: "Aircraft exhibit at Aero India" },
+      { src: "/media/aero-india-23/04-960.webp", srcSet: "/media/aero-india-23/04-480.webp 480w, /media/aero-india-23/04-960.webp 960w", width: 1200, height: 900, alt: "Aviation display at Aero India" },
+      { src: "/media/aero-india-23/05-960.webp", srcSet: "/media/aero-india-23/05-480.webp 480w, /media/aero-india-23/05-960.webp 960w", width: 1200, height: 900, alt: "Military equipment exhibit at Aero India" }
+    ]
   }
 ] as const satisfies readonly RightNowItem[];
 
