@@ -14,7 +14,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @Import({RepositoryConfiguration.class, HttpConfig.class, ThreadPoolConfig.class, DefaultRepository.class, DefaultHttpClient.class})
 @EnableScheduling
-@EnableConfigurationProperties(com.samsepiol.portfolio.configuration.GitHubRefreshProperties.class)
+@EnableConfigurationProperties({
+        com.samsepiol.portfolio.configuration.GitHubRefreshProperties.class,
+        com.samsepiol.portfolio.configuration.BeszelProperties.class
+})
 public class PortfolioApiApplication {
 
     public static void main(String[] args) {

@@ -1,6 +1,5 @@
 package com.samsepiol.portfolio.provider.beszel;
 
-import java.time.Instant;
 import java.util.List;
 
 /**
@@ -9,8 +8,5 @@ import java.util.List;
  * model; neither Beszel URLs nor raw records may cross the public API boundary.
  */
 public interface BeszelRestClient {
-    List<BeszelSystem> fetchSystems();
-
-    record BeszelSystem(String internalId, String state, Instant observedAt) {
-    }
+    List<BeszelMetricSystem> fetchMetrics(BeszelMetricsRequest request);
 }

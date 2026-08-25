@@ -1,0 +1,16 @@
+---
+import BeszelConnectionSetup from "../../components/BeszelConnectionSetup";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="Beszel connection — operator setup" description="Private Tailnet-only Beszel metrics setup." noIndex>
+  <div class="frame operator-page">
+    <a class="operator-page__back" href="/">Return to public field record</a>
+    <BeszelConnectionSetup client:load />
+  </div>
+</BaseLayout>
+
+<style>
+  .operator-page { max-width: 48rem; padding-block: clamp(2rem, 8vw, 6rem); }
+  .operator-page__back { color: var(--muted); font-family: var(--font-mono); font-size: 0.78rem; }
+</style>

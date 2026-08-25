@@ -38,6 +38,8 @@ public class GitHubTokenManagementConfiguration {
     public static final String GITHUB_TOKEN_WRITE_OPERATION = "github-token-write";
     public static final String GITHUB_TOKEN_USE_OPERATION = "github-token-use";
     public static final String BESZEL_TOKEN_WRITE_OPERATION = "beszel-token-write";
+    public static final String BESZEL_TOKEN_USE_OPERATION = "beszel-token-use";
+    public static final String BESZEL_METRICS_READ_OPERATION = "beszel-metrics-read";
     private static final TokenReference GITHUB_TOKEN_REFERENCE = new TokenReference(
             "portfolio", "github", "personal-access-token");
 
@@ -73,6 +75,10 @@ public class GitHubTokenManagementConfiguration {
                         && request.getPrincipalId().startsWith("tailnet:"))
                         || (BESZEL_TOKEN_WRITE_OPERATION.equals(request.getOperation())
                         && request.getPrincipalId().startsWith("tailnet:"))
+                        || (BESZEL_METRICS_READ_OPERATION.equals(request.getOperation())
+                        && request.getPrincipalId().startsWith("tailnet:"))
+                        || (BESZEL_TOKEN_USE_OPERATION.equals(request.getOperation())
+                        && "beszel-metrics-reader".equals(request.getPrincipalId()))
                         || (GITHUB_TOKEN_USE_OPERATION.equals(request.getOperation())
                         && "github-refresh-scheduler".equals(request.getPrincipalId())));
     }
