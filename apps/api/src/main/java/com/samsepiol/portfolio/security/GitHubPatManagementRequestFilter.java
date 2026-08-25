@@ -7,7 +7,7 @@ import jakarta.servlet.ReadListener;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletRequestWrapper;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
@@ -23,9 +23,10 @@ import java.nio.charset.StandardCharsets;
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
-@ConditionalOnProperty(prefix = "portfolio.github-token", name = "enabled", havingValue = "true")
+@ConditionalOnExpression("'${portfolio.github-token.enabled:false}' == 'true' or '${portfolio.beszel.enabled:false}' == 'true'")
 public class GitHubPatManagementRequestFilter extends OncePerRequestFilter {
     private static final String PAT_PATH = "/internal/v1/provider-profiles/github/pat";
+    private static final String BESZEL_PAIR_PATH = "/internal/v1/provider-profiles/beszel/pair";
     private static final String REFRESH_PATH = "/internal/v1/provider-profiles/github/activity/refresh";
     public static final int MAX_BODY_BYTES = 2_048;
 
@@ -38,7 +39,9 @@ public class GitHubPatManagementRequestFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         return !"POST".equals(request.getMethod())
-                || (!PAT_PATH.equals(request.getRequestURI()) && !REFRESH_PATH.equals(request.getRequestURI()));
+                || (!PAT_PATH.equals(request.getRequestURI())
+                && !BESZEL_PAIR_PATH.equals(request.getRequestURI())
+                && !REFRESH_PATH.equals(request.getRequestURI()));
     }
 
     @Override

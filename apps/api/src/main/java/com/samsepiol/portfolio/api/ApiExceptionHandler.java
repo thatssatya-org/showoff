@@ -2,6 +2,7 @@ package com.samsepiol.portfolio.api;
 
 import com.samsepiol.library.core.security.management.ManagementAuthorizationDeniedException;
 import com.samsepiol.portfolio.security.ManagementAccessDeniedException;
+import com.samsepiol.portfolio.provider.beszel.BeszelProviderException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -21,6 +22,7 @@ public class ApiExceptionHandler {
     private static final URI NEWSLETTER_UNAVAILABLE = URI.create("https://portfolio.invalid/problems/newsletter-unavailable");
     private static final URI NEWSLETTER_RATE_LIMITED = URI.create("https://portfolio.invalid/problems/newsletter-rate-limited");
     private static final URI MANAGEMENT_FORBIDDEN = URI.create("https://portfolio.invalid/problems/management-forbidden");
+    private static final URI BESZEL_UNAVAILABLE = URI.create("https://portfolio.invalid/problems/beszel-unavailable");
 
     @ExceptionHandler(InvalidCapabilityException.class)
     ProblemDetail invalidCapability(InvalidCapabilityException exception) {
@@ -35,8 +37,8 @@ public class ApiExceptionHandler {
         return newsletterProblem(HttpStatus.BAD_REQUEST, "Invalid newsletter subscription");
     }
 
-    @ExceptionHandler(GitHubPatRequestException.class)
-    ProblemDetail invalidGitHubPatRequest(GitHubPatRequestException exception) {
+    @ExceptionHandler({GitHubPatRequestException.class, BeszelPairingRequestException.class})
+    ProblemDetail invalidProviderManagementRequest(RuntimeException exception) {
         var problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
                 "The management request could not be accepted.");
         problem.setType(MANAGEMENT_FORBIDDEN);
@@ -72,6 +74,15 @@ public class ApiExceptionHandler {
                 "The management request could not be accepted.");
         problem.setType(MANAGEMENT_FORBIDDEN);
         problem.setTitle("Management request forbidden");
+        return problem;
+    }
+
+    @ExceptionHandler(BeszelProviderException.class)
+    ProblemDetail beszelUnavailable(BeszelProviderException exception) {
+        var problem = ProblemDetail.forStatusAndDetail(exception.getError().httpStatus(),
+                "The Beszel metrics source is temporarily unavailable.");
+        problem.setType(BESZEL_UNAVAILABLE);
+        problem.setTitle("Beszel unavailable");
         return problem;
     }
 

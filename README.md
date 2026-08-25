@@ -91,6 +91,14 @@ the Docker network. Stop the demo with `docker compose --env-file .env -f
 compose.local.yaml down`; append `--volumes` only when discarding local data is
 intended.
 
+### Operator-only Docker metrics
+
+The separate [Beszel operator setup](docs/BESZEL_OPERATOR_SETUP.md) collects
+local Docker container metrics without creating a public service. Its hub is
+bound to loopback and its Docker socket proxy is private to that Compose
+project. It does not connect to the public homelab page, whose htop-like bars
+are a deliberately static capacity-principles illustration.
+
 ### Enable the GitHub activity card
 
 The public card is intentionally absent until the operator explicitly approves
@@ -118,6 +126,33 @@ Tailscale Serve bridge solely to recover the original client address from
 range, or public range as a proxy. The same Tailnet-only proxy provides the
 manual `POST /operator/github/activity/refresh` action. A successful refresh
 returns `204`; an empty token submission returns `400`, not `403`.
+
+### Enable the private Beszel metric dashboard
+
+Beszel is consumed by Showoff's backend only. The browser talks exclusively to
+same-origin Showoff endpoints; it never receives the Beszel origin, a raw
+PocketBase record, or a credential, and it never establishes a direct Beszel
+connection.
+
+Configure the Tailnet HTTPS origin only in the untracked backend environment,
+then rebuild just `api` and `web`:
+
+```dotenv
+PORTFOLIO_BESZEL_ENABLED=true
+PORTFOLIO_BESZEL_BASE_URL=https://beszel.<tailnet>.ts.net
+PORTFOLIO_BESZEL_CACHE_TTL=15s
+PUBLIC_ENABLE_OPERATOR_BESZEL_SETUP=true
+```
+
+From a Tailnet client, open `/operator/beszel/` and submit the Beszel access
+token. The write-only endpoint is `POST /operator/beszel/pair`; it accepts
+only `{ "token": "…" }`, encrypts it in the backend, and returns `204`.
+Then use **`/operator/beszel/dashboard/`** for the metric dashboard. Its
+same-origin `GET /operator/beszel/metrics` endpoint is Tailnet-only and returns
+only name, state, CPU, memory, disk, load, cache time, and stale state. It is a
+Showoff projection, not a Beszel proxy. The backend limits provider responses,
+uses a fixed Tailnet origin, and caches successful responses for the configured
+short TTL; last-known-good metrics are marked stale if Beszel becomes unavailable.
 
 GitHub snapshot persistence uses BSON `Long` epoch-millisecond fields
 (`refreshedAtEpochMillis` and `validUntilEpochMillis`) to avoid Java-Time codec

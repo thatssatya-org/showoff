@@ -32,6 +32,12 @@ http-config:
           response-logging-enabled: false
           max-response-body-bytes: 262144
 portfolio:
+  beszel:
+    enabled: false
+    # A Tailnet HTTPS origin, configured only in the backend environment.
+    # It is never sent to the browser or accepted from an operator form.
+    base-url: https://replace-me.ts.net
+    cache-ttl: 15s
   github-refresh:
     enabled: false
     public-approved: false

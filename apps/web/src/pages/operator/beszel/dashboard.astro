@@ -1,0 +1,20 @@
+---
+import BeszelMetricsDashboard from "../../../components/BeszelMetricsDashboard";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="Metric dashboard — operator setup" description="Private Tailnet-only metric projection." noIndex>
+  <div class="frame beszel-page">
+    <a class="beszel-page__back" href="/operator/beszel/">Beszel pairing</a>
+    <header><p class="eyebrow">Systems / Beszel</p><h1>Metric dashboard.</h1><p>Showoff’s backend reads Beszel and returns this constrained Tailnet projection. The browser never contacts Beszel.</p></header>
+    <BeszelMetricsDashboard client:load />
+  </div>
+</BaseLayout>
+
+<style>
+  .beszel-page { max-width: 72rem; padding-block: clamp(2rem, 8vw, 6rem); }
+  .beszel-page__back { color: var(--muted); font-family: var(--font-mono); font-size: 0.78rem; }
+  header { max-width: 48rem; margin: 2rem 0; }
+  h1 { margin: 0.35rem 0 1rem; font-family: var(--font-display); font-size: clamp(2.8rem, 7vw, 5.2rem); letter-spacing: -0.07em; line-height: 0.9; }
+  header > p:not(.eyebrow) { color: var(--muted); }
+</style>

@@ -4,7 +4,7 @@ import com.samsepiol.library.core.security.management.ManagementAuthorizationReq
 import com.samsepiol.portfolio.configuration.GitHubTokenManagementConfiguration;
 import com.samsepiol.portfolio.configuration.GitHubTokenProperties;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
 
 import java.net.InetAddress;
@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-@ConditionalOnProperty(prefix = "portfolio.github-token", name = "enabled", havingValue = "true")
+@ConditionalOnExpression("'${portfolio.github-token.enabled:false}' == 'true' or '${portfolio.beszel.enabled:false}' == 'true'")
 public class TailnetManagementAccess {
     public static final String CANONICAL_CLIENT_ADDRESS_HEADER = "X-Portfolio-Client-Address";
 
@@ -26,6 +26,10 @@ public class TailnetManagementAccess {
     }
 
     public ManagementAuthorizationRequest authorize(HttpServletRequest request) {
+        return authorize(request, GitHubTokenManagementConfiguration.GITHUB_TOKEN_WRITE_OPERATION);
+    }
+
+    public ManagementAuthorizationRequest authorize(HttpServletRequest request, String operation) {
         if (!isTrustedProxyAddress(request.getRemoteAddr())) {
             throw new ManagementAccessDeniedException();
         }
@@ -34,7 +38,7 @@ public class TailnetManagementAccess {
             throw new ManagementAccessDeniedException();
         }
         return ManagementAuthorizationRequest.builder().principalId("tailnet:" + clientAddress)
-                .operation(GitHubTokenManagementConfiguration.GITHUB_TOKEN_WRITE_OPERATION).attributes(Map.of()).build();
+                .operation(operation).attributes(Map.of()).build();
     }
 
     private boolean isTrustedProxyAddress(String remoteAddress) {

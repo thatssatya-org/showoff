@@ -345,6 +345,18 @@ button {
 .operator-connection__error { color: var(--accent); }
 .operator-connection__future { border-top: 1px solid var(--line); padding-top: 1rem; }
 
+.beszel-dashboard { display: grid; gap: 1rem; }
+.beszel-dashboard__notice, .beszel-dashboard__status { color: var(--muted); font-family: var(--font-mono); font-size: 0.78rem; }
+.beszel-dashboard__grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }
+.beszel-system { padding: 1.15rem; }
+.beszel-system header { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
+.beszel-system h2 { margin: 0.25rem 0 0; font-family: var(--font-display); font-size: 1.6rem; letter-spacing: -0.045em; line-height: 0.95; }
+.beszel-system__state { border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-family: var(--font-mono); font-size: 0.65rem; padding: 0.2rem 0.45rem; text-transform: uppercase; }
+.beszel-system dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.85rem; margin: 1.5rem 0 0; }
+.beszel-system dl div { display: grid; gap: 0.15rem; }
+.beszel-system dt { color: var(--muted); font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.beszel-system dd { margin: 0; font-variant-numeric: tabular-nums; font-weight: 600; }
+
 /* Public source cache. A field ledger, not a generic activity feed. */
 .live-sources { padding-block: clamp(2.5rem, 6vw, 5rem); }
 

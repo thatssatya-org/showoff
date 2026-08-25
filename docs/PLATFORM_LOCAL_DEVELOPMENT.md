@@ -9,6 +9,11 @@ to satisfy the deployment/release gate in
 has explicitly authorised their use for the current GitHub token-management
 integration work only; this does not change the deployment/release gate.
 
+The same local snapshot exception applies to the Tailnet-only Beszel operator
+adapter. It must keep token storage in `token-management` and outbound I/O in
+the shared bounded `http` client; do not add direct vendor clients or browser
+calls to Beszel.
+
 | Source repository | Revision | Installed coordinate |
 | --- | --- | --- |
 | `platform/samsepiol-bom` | `01721c1` (`master`, no local tag) | `com.samsepiol:bom:0.0.5-BOM-SNAPSHOT` |

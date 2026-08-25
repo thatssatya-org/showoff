@@ -18,6 +18,7 @@ import com.samsepiol.library.token.management.persistence.TokenManagementCodecSu
 import com.samsepiol.library.token.management.persistence.TokenRepository;
 import com.samsepiol.portfolio.security.TailnetManagementAccess;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,11 +32,14 @@ import java.util.Base64;
 import java.util.function.LongSupplier;
 
 @Configuration
-@ConditionalOnProperty(prefix = "portfolio.github-token", name = "enabled", havingValue = "true")
+@ConditionalOnExpression("'${portfolio.github-token.enabled:false}' == 'true' or '${portfolio.beszel.enabled:false}' == 'true'")
 @EnableConfigurationProperties(GitHubTokenProperties.class)
 public class GitHubTokenManagementConfiguration {
     public static final String GITHUB_TOKEN_WRITE_OPERATION = "github-token-write";
     public static final String GITHUB_TOKEN_USE_OPERATION = "github-token-use";
+    public static final String BESZEL_TOKEN_WRITE_OPERATION = "beszel-token-write";
+    public static final String BESZEL_TOKEN_USE_OPERATION = "beszel-token-use";
+    public static final String BESZEL_METRICS_READ_OPERATION = "beszel-metrics-read";
     private static final TokenReference GITHUB_TOKEN_REFERENCE = new TokenReference(
             "portfolio", "github", "personal-access-token");
 
@@ -69,6 +73,12 @@ public class GitHubTokenManagementConfiguration {
         return new PolicyBackedManagementAuthorization(request ->
                 (GITHUB_TOKEN_WRITE_OPERATION.equals(request.getOperation())
                         && request.getPrincipalId().startsWith("tailnet:"))
+                        || (BESZEL_TOKEN_WRITE_OPERATION.equals(request.getOperation())
+                        && request.getPrincipalId().startsWith("tailnet:"))
+                        || (BESZEL_METRICS_READ_OPERATION.equals(request.getOperation())
+                        && request.getPrincipalId().startsWith("tailnet:"))
+                        || (BESZEL_TOKEN_USE_OPERATION.equals(request.getOperation())
+                        && "beszel-metrics-reader".equals(request.getPrincipalId()))
                         || (GITHUB_TOKEN_USE_OPERATION.equals(request.getOperation())
                         && "github-refresh-scheduler".equals(request.getPrincipalId())));
     }

@@ -119,6 +119,22 @@ The credential command is not reachable through the public site route or public 
 
 The reverse proxy rejects non-Tailnet clients for both the setup page and the write alias. Before proxying it deletes caller-supplied `Forwarded`, `X-Forwarded-*`, `X-Real-IP`, and canonical identity headers and creates the sole `X-Portfolio-Client-Address` value from its direct client connection. The API accepts that header only when `request.getRemoteAddr()` belongs to the explicit `portfolio.github-token.trusted-proxy-cidrs` configuration. It then requires the canonical address to belong to `portfolio.github-token.tailnet-cidrs`. A non-proxy caller, a malformed/multi-value canonical address, or an out-of-range client is rejected before request-body consumption. The API container is internal-only; no public/LAN route may target `/internal/**`.
 
+### 3.4.1 Beszel operator metrics boundary
+
+Beszel follows the same write-only credential contract at
+`POST /operator/beszel/pair`, but its Tailnet HTTPS origin is immutable backend
+configuration (`portfolio.beszel.base-url`), never browser input. The provider
+client calls only the authenticated Beszel `systems` and `system_stats`
+collections through the shared bounded HTTP client. It projects no provider
+identifier, URL, token, raw record, container detail, or topology. The
+Tailnet-only Showoff endpoint `GET /operator/beszel/metrics` authenticates the
+original client address at the proxy boundary, obtains the encrypted token only
+inside the provider callback, and returns only name, state, CPU percentage,
+memory percentage, disk percentage, load average, refresh time, and stale flag.
+It retains a short in-memory last-known-good cache on upstream failure. Neither
+route is part of the public `/api/**` surface or OpenAPI public capability
+registry.
+
 ### 3.5 GitHub refresh adapter
 
 The scheduled GitHub adapter is an out-of-band capability strategy: projected enabled profile read; callback-only `TokenManagementService.useForInternalIntegration(...)`; an allow-listed `api.github.com` REST v3 public-events endpoint; conditional ETag requests; atomic replacement of a public-safe snapshot; and last-known-good preservation on any upstream fault. It never runs from a visitor request. The initial safe increment fetches only the eight public events and persists only event type, UTC calendar day, and public repository name. It never persists payload content, commit messages, private repository metadata, or a provider token.
