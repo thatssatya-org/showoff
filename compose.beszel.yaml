@@ -1,0 +1,101 @@
+name: showoff-beszel
+
+# Operator-only metrics. This Compose project is intentionally separate from the
+# public portfolio stack: it has no public route and does not feed the website.
+services:
+  beszel:
+    image: henrygd/beszel:0.18.8@sha256:4c51486968efa0b0a702c1b0967966a2e06fb250b7418f3072d2488faea27c51
+    restart: unless-stopped
+    mem_limit: 192m
+    cpus: 0.25
+    pids_limit: 128
+    environment:
+      APP_URL: ${BESZEL_APP_URL:-http://127.0.0.1:8090}
+      CHECK_UPDATES: "false"
+      CONTAINER_DETAILS: "false"
+      SHARE_ALL_SYSTEMS: "false"
+      USER_CREATION: "false"
+    ports:
+      - "127.0.0.1:${BESZEL_HUB_PORT:-8090}:8090"
+    volumes:
+      - beszel-data:/beszel_data
+      - beszel-socket:/beszel_socket
+    networks:
+      - beszel-private
+    read_only: true
+    tmpfs:
+      - /tmp:mode=1777,noexec,nosuid,size=16m
+    security_opt:
+      - no-new-privileges:true
+
+  docker-socket-proxy:
+    image: linuxserver/socket-proxy:3.4.3-r0-ls92@sha256:165670d41ce04c44c271075e4be87f6de17633478eae817ed967d71755de650b
+    restart: unless-stopped
+    mem_limit: 48m
+    cpus: 0.10
+    pids_limit: 64
+    environment:
+      CONTAINERS: "1"
+      POST: "0"
+    volumes:
+      # Never publish this socket or the proxy port. The proxy exposes only the
+      # container-read API Beszel needs to the private network below.
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - beszel-private
+    read_only: true
+    tmpfs:
+      - /run:mode=0755,noexec,nosuid,size=4m
+      - /tmp:mode=1777,noexec,nosuid,size=8m
+    security_opt:
+      - no-new-privileges:true
+
+  beszel-agent:
+    image: henrygd/beszel-agent:0.18.8@sha256:3b1939746690e423072b4a99bf4c4af6dd9562a68978a33738a3c4a4cc000c39
+    restart: unless-stopped
+    mem_limit: 96m
+    cpus: 0.20
+    pids_limit: 64
+    depends_on:
+      docker-socket-proxy:
+        condition: service_started
+    environment:
+      LISTEN: /beszel_socket/beszel.sock
+      KEY_FILE: /run/secrets/beszel_agent_public_key
+      TOKEN_FILE: /run/secrets/beszel_agent_token
+      DOCKER_HOST: tcp://docker-socket-proxy:2375
+      DOCKER_TIMEOUT: 5s
+      MEM_CALC: htop
+      NICS: ""
+      SENSORS: ""
+      SMART_DEVICES: ""
+      SKIP_GPU: "true"
+      SKIP_SYSTEMD: "true"
+    secrets:
+      - beszel_agent_public_key
+      - beszel_agent_token
+    volumes:
+      - beszel-agent-data:/var/lib/beszel-agent
+      - beszel-socket:/beszel_socket
+    networks:
+      - beszel-private
+    read_only: true
+    tmpfs:
+      - /tmp:mode=1777,noexec,nosuid,size=8m
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  beszel-private:
+    internal: true
+
+secrets:
+  beszel_agent_public_key:
+    environment: BESZEL_AGENT_PUBLIC_KEY
+  beszel_agent_token:
+    environment: BESZEL_AGENT_TOKEN
+
+volumes:
+  beszel-agent-data:
+  beszel-data:
+  beszel-socket:
